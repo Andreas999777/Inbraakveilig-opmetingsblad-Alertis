@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbraakveilig Opmetingsformulier V2</title>
+    <title>Inbraakveilig Opmetingsformulier V2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -12,7 +12,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #fef2f2; padding: 20px; }
         .card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #fca5a5; margin-bottom: 1.5rem; }
         .door-section { border-left: 8px solid #dc2626; }
-        .action-button { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+        .action-button { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 13px; text-decoration: none; }
         .input-field { width: 100%; padding: 10px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 14px; }
         .photo-preview-img { width: 120px; height: 120px; object-fit: cover; border: 1px solid #dc2626; border-radius: 4px; margin: 5px; }
         .collapsed .door-content { display: none; }
@@ -27,6 +27,7 @@
             <button onclick="saveToFile()" class="action-button bg-slate-800 text-white hover:bg-black">💾 Export JSON</button>
             <label class="action-button bg-slate-800 text-white hover:bg-black cursor-pointer">📂 Import JSON <input type="file" class="hidden" onchange="loadFromFile(event)"></label>
             <button onclick="generateProfessionalPDF()" class="action-button bg-red-600 text-white hover:bg-red-700">📄 Genereer PDF</button>
+            <a href="https://www.adobe.com/be_nl/acrobat/online/pdf-to-word.html" target="_blank" class="action-button bg-blue-600 text-white hover:bg-blue-700">🔄 Omzetten naar Word</a>
             <button onclick="clearForm()" class="action-button bg-gray-500 text-white hover:bg-gray-700">🗑️ Wis Formulier</button>
         </div>
 
@@ -104,7 +105,7 @@
             {n:"91", d:"TS 83 Deurafsluiter (Schaararm)", t:1.5, p:259.77},
             {n:"92", d:"TS 92 Glijarm-deurafsluiter", t:1.5, p:298.69},
             {n:"93", d:"TS 93 Glijarm-deurafsluiter", t:1, p:362.24},
-            {n:"94", d:"Verwijdering bestaande installatie", t:0, p:79.00}
+            {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00}
         ];
 
         function reindexDoors() {
