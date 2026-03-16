@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbraakveilig Offertetool v3</title>
+    <title>Inbraakveilig-opmetingsblad-Alertis v3.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script id="saved-data" type="application/json">{}</script>
@@ -112,15 +112,15 @@
                 </div>
                 <div class="door-content p-6">
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        <input type="text" class="input-field door-loc" placeholder="Locatie (inkom, garage...)" oninput="updateDoorTitle(this)">
-                        <input type="text" class="input-field door-type" placeholder="Type deur">
+                        <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Plaats</label><input type="text" class="input-field door-loc" placeholder="Inkom, Garage..." oninput="updateDoorTitle(this)"></div>
+                        <div><label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Type Deur</label><input type="text" class="input-field door-type" placeholder="Hout, Alu, Glas..."></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-1 mb-4 border-y py-4 max-h-60 overflow-y-auto">
-                        ${artikelen.map(a => `<label class="flex items-center gap-2 text-[11px] hover:bg-red-50 p-1"><input type="checkbox" class="art-check" data-n="${a.n}" data-p="${a.p}" onchange="calculateDoorTotal(this)"> ${a.n} - ${a.d} <b class="ml-auto">€${a.p.toFixed(2)}</b></label>`).join('')}
+                        ${artikelen.map(a => `<label class="flex items-center gap-2 text-[11px] hover:bg-red-50 p-1"><input type="checkbox" class="art-check" data-n="${a.n}" data-p="${a.p}" data-t="${a.t}" onchange="calculateDoorTotal(this)"> ${a.n} - ${a.d} <b class="ml-auto">€${a.p.toFixed(2)}</b></label>`).join('')}
                     </div>
-                    <div class="flex justify-between items-center mb-4 bg-gray-50 p-3 rounded">
-                        <span class="text-xs font-bold uppercase text-gray-500">Totaal deze deur:</span>
-                        <input type="text" class="door-price font-bold text-red-600 bg-transparent border-none text-right" value="€ 0,00" readonly>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Totaal Prijs (Excl. BTW)</label><input type="text" class="door-price font-bold text-red-600 input-field" value="€ 0,00" readonly></div>
+                        <div><label class="block text-[10px] font-bold text-blue-600 uppercase mb-1">Werkuren (Interne Calculatie)</label><input type="text" class="door-hours font-bold text-blue-600 input-field" value="0u" readonly></div>
                     </div>
                     <textarea class="input-field door-notes mb-4" placeholder="Opmerkingen..."></textarea>
                     <div class="no-print">
@@ -138,9 +138,19 @@
 
         function calculateDoorTotal(el) {
             const section = el.closest('.door-section');
-            let t = 0;
-            section.querySelectorAll('.art-check:checked').forEach(c => t += parseFloat(c.dataset.p));
-            section.querySelector('.door-price').value = `€ ${t.toFixed(2).replace('.', ',')}`;
+            let totalP = 0; let totalT = 0;
+            section.querySelectorAll('.art-check:checked').forEach(c => {
+                totalP += parseFloat(c.dataset.p);
+                totalT += parseFloat(c.dataset.t || 0);
+            });
+            section.querySelector('.door-price').value = `€ ${totalP.toFixed(2).replace('.', ',')}`;
+            
+            const hoursInput = section.querySelector('.door-hours');
+            if (totalT > 0) {
+                let h = Math.floor(totalT); let m = Math.round((totalT - h) * 60);
+                hoursInput.value = `${h}u ${m > 0 ? m + 'min' : ''}`;
+            } else { hoursInput.value = '0u'; }
+            
             updateGrandTotal();
         }
 
@@ -171,7 +181,7 @@
             return {
                 h: { k: document.getElementById('klantNaam').value, p: document.getElementById('projectNaam').value, v: document.getElementById('verkoperNaam').value, a: document.getElementById('projectAdres').value, d: document.getElementById('displayDate').value, b: document.getElementById('btwSelect').value },
                 doors: Array.from(document.querySelectorAll('.door-section')).map(s => ({
-                    l: s.querySelector('.door-loc').value, t: s.querySelector('.door-type').value, n: s.querySelector('.door-notes').value, p: s.querySelector('.door-price').value,
+                    l: s.querySelector('.door-loc').value, t: s.querySelector('.door-type').value, n: s.querySelector('.door-notes').value, p: s.querySelector('.door-price').value, w: s.querySelector('.door-hours').value,
                     items: Array.from(s.querySelectorAll('.art-check:checked')).map(c => c.dataset.n),
                     imgs: Array.from(s.querySelectorAll('.photo-preview-img')).map(i => i.src)
                 }))
@@ -190,7 +200,7 @@
             calculateDoorTotal(div.querySelector('.art-check'));
         }
 
-        function autoSave() { localStorage.setItem('ib_save', JSON.stringify(getFormData())); }
+        function autoSave() { localStorage.setItem('ib_save_v3', JSON.stringify(getFormData())); }
 
         function exportHTML() {
             document.getElementById('saved-data').textContent = JSON.stringify(getFormData());
@@ -238,7 +248,8 @@
                         </div>
                         <div style="background:#fef2f2; padding:15px; border-radius:8px; font-size:12px; margin-bottom:20px; border: 1px solid #fecaca;">
                             <strong>Klant:</strong> ${data.h.k} | <strong>Project:</strong> ${data.h.p}<br>
-                            <strong>Adres:</strong> ${data.h.a} | <strong>Datum:</strong> ${data.h.d}
+                            <strong>Adres:</strong> ${data.h.a} | <strong>Datum:</strong> ${data.h.d}<br>
+                            <strong>Verkoper:</strong> ${data.h.v}
                         </div>` : ''}
                     
                     <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
@@ -248,12 +259,15 @@
                                 <tr style="border-bottom: 2px solid #dc2626; text-align:left;"><th style="padding:5px;">Omschrijving</th><th style="text-align:right;">Prijs</th></tr>
                                 ${d.items.map(n => {
                                     const art = artikelen.find(a => a.n === n);
-                                    return `<tr><td style="padding:5px; border-bottom:1px solid #f1f5f9;">${art.n} - ${art.d}</td><td style="text-align:right;">€ ${art.p.toFixed(2)}</td></tr>`;
+                                    return `<tr><td style="padding:5px; border-bottom:1px solid #f1f5f9;">${art.n} - ${art.d}</td><td style="text-align:right;">€ ${art.p.toFixed(2).replace('.', ',')}</td></tr>`;
                                 }).join('')}
                             </table>
-                            <div style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:5px;">
-                                <p style="margin:0; font-weight:800; color:#dc2626;">Totaal Deur: ${d.p}</p>
-                                <p style="margin:5px 0 0 0; font-size:10px;"><b>Nota:</b> ${d.n}</p>
+                            <div style="margin-top:10px; padding:12px; background:#f8fafc; border-radius:5px; border: 1px solid #e2e8f0;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                    <span style="font-weight:800; color:#dc2626;">Subtotaal Deur: ${d.p}</span>
+                                    <span style="font-size:10px; color:#3b82f6; font-weight:bold;">INTERNE CALCULATIE: ${d.w}</span>
+                                </div>
+                                <p style="margin:5px 0 0 0; font-size:10px; color:#64748b;"><b>Opmerkingen:</b> ${d.n !== '...' ? d.n : 'Geen.'}</p>
                             </div>
                         </div>
                         <div style="padding: 0 15px 15px 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -264,31 +278,35 @@
             });
 
             c += `<div style="page-break-before: always; padding: 20mm;">
-                    <div style="border: 2px solid #15803d; background: #f0fdf4; padding: 30px; border-radius: 12px; max-width: 400px; margin-left: auto;">
-                        <h2 style="color:#15803d; margin-top:0; border-bottom: 2px solid #15803d; padding-bottom:10px;">OVERZICHT TOTAAL</h2>
-                        <table style="width:100%; font-size:14px;">
-                            <tr><td>Excl. BTW:</td><td style="text-align:right;">${document.getElementById('sumExcl').innerText}</td></tr>
-                            <tr><td>BTW Bedrag:</td><td style="text-align:right;">${document.getElementById('sumBtw').innerText}</td></tr>
-                            <tr style="font-size:20px; font-weight:900; color:#15803d;"><td>TOTAAL:</td><td style="text-align:right;">${document.getElementById('sumIncl').innerText}</td></tr>
+                    <div style="border: 2px solid #15803d; background: #f0fdf4; padding: 30px; border-radius: 12px; max-width: 400px; margin-left: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <h2 style="color:#15803d; margin-top:0; border-bottom: 2px solid #15803d; padding-bottom:10px; font-weight:800;">TOTAALOVERZICHT</h2>
+                        <table style="width:100%; font-size:14px; border-spacing: 0 8px; border-collapse: separate;">
+                            <tr><td style="font-weight:500;">Excl. BTW:</td><td style="text-align:right; font-weight:700;">${document.getElementById('sumExcl').innerText}</td></tr>
+                            <tr><td style="font-weight:500;">BTW (${document.getElementById('btwSelect').options[document.getElementById('btwSelect').selectedIndex].text}):</td><td style="text-align:right; font-weight:700;">${document.getElementById('sumBtw').innerText}</td></tr>
+                            <tr style="font-size:22px; font-weight:900; color:#15803d;">
+                                <td style="padding-top:15px; border-top:1px solid #bbf7d0;">TOTAAL:</td>
+                                <td style="padding-top:15px; border-top:1px solid #bbf7d0; text-align:right;">${document.getElementById('sumIncl').innerText}</td>
+                            </tr>
                         </table>
                     </div>
+                    <div style="margin-top: 50px; text-align:center; color:#94a3b8; font-size:10px;">Inbraakveilig | BE 0660.598.308 | 052 22 21 35</div>
                 </div></div>`;
             
             el.innerHTML = c;
-            html2pdf().from(el).set({ margin:0, filename: `Offerte_${data.h.k}.pdf`, html2canvas:{scale:2}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} }).save();
+            html2pdf().from(el).set({ margin:0, filename: `Offerte_${data.h.k}.pdf`, html2canvas:{scale:2, useCORS: true}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} }).save();
         }
 
         window.onload = () => {
             const eb = document.getElementById('saved-data').textContent;
             if(eb && eb !== "{}" && eb !== "") render(JSON.parse(eb));
             else {
-                const s = localStorage.getItem('ib_save');
+                const s = localStorage.getItem('ib_save_v3');
                 if(s) render(JSON.parse(s));
                 else { const d = new Date(); document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; addDoor(); }
             }
         };
         
-        function clearForm() { if(confirm("Volledig wissen?")) { localStorage.removeItem('ib_save'); location.reload(); } }
+        function clearForm() { if(confirm("Volledig wissen?")) { localStorage.removeItem('ib_save_v3'); location.reload(); } }
     </script>
 </body>
 </html>
