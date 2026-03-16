@@ -3,47 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbraakveilig-Opmetingsblad-Alertis</title>
+    <title>Inbraakveilig Offertetool v3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script id="saved-data" type="application/json">{}</script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #fef2f2; padding: 20px; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #fca5a5; margin-bottom: 1.5rem; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fef2f2; padding: 20px; color: #1e293b; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #fca5a5; margin-bottom: 1.5rem; }
         .door-section { border-left: 8px solid #dc2626; }
-        .action-button { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 13px; text-decoration: none; }
-        .input-field { width: 100%; padding: 10px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 14px; }
-        .photo-preview-img { width: 120px; height: 120px; object-fit: cover; border: 1px solid #dc2626; border-radius: 4px; margin: 5px; }
+        .action-button { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 13px; border: none; }
+        .input-field { width: 100%; padding: 10px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 14px; background: #fff; }
+        .photo-preview-img { width: 140px; height: 140px; object-fit: cover; border: 2px solid #dc2626; border-radius: 8px; margin: 5px; }
         .collapsed .door-content { display: none; }
+        .sticky-nav { position: sticky; top: 10px; z-index: 50; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body oninput="autoSave()">
 
     <div class="max-w-5xl mx-auto">
-        <div class="no-print mb-8 p-4 bg-white rounded-xl shadow-lg border border-red-200 flex flex-wrap gap-3 items-center sticky top-4 z-50">
-            <h2 class="text-red-700 font-bold mr-4 uppercase tracking-wider">Inbraakveilig</h2>
+        <div class="no-print mb-8 p-4 rounded-xl shadow-lg border border-red-200 flex flex-wrap gap-3 items-center sticky-nav">
+            <div class="mr-auto">
+                <h2 class="text-red-700 font-extrabold uppercase tracking-tighter text-xl">Inbraakveilig</h2>
+                <p class="text-[10px] text-gray-500 font-bold">BTW BE 0660.598.308</p>
+            </div>
             <button onclick="exportHTML()" class="action-button bg-slate-800 text-white hover:bg-black">💾 Sla Bewerkbaar Bestand Op</button>
             <label class="action-button bg-slate-800 text-white hover:bg-black cursor-pointer">📂 Open Bestand <input type="file" accept=".html,.json" class="hidden" onchange="loadFromFile(event)"></label>
-            <button onclick="generateProfessionalPDF()" class="action-button bg-red-600 text-white hover:bg-red-700">📄 Genereer Offerte (PDF)</button>
-            <a href="https://www.adobe.com/be_nl/acrobat/online/pdf-to-word.html" target="_blank" class="action-button bg-blue-600 text-white hover:bg-blue-700">🔄 Naar Word (Adobe)</a>
-            <button onclick="clearForm()" class="action-button bg-gray-500 text-white hover:bg-gray-700">🗑️ Wis alles</button>
+            <button onclick="generateProfessionalPDF()" class="action-button bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200">📄 Genereer Offerte (PDF)</button>
+            <button onclick="clearForm()" class="action-button bg-gray-200 text-gray-600 hover:bg-gray-300">🗑️ Wis</button>
         </div>
 
         <div class="card p-6 border-t-4 border-red-600">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Klant</label><input type="text" id="klantNaam" class="input-field" value="..."></div>
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Project</label><input type="text" id="projectNaam" class="input-field" value="..."></div>
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Verkoper</label><input type="text" id="verkoperNaam" class="input-field" value="..."></div>
-                <div class="md:col-span-1"><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Adres Project</label><input type="text" id="projectAdres" class="input-field" value="..."></div>
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Datum</label><input type="text" id="displayDate" class="input-field"></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Klant</label><input type="text" id="klantNaam" class="input-field" value="..."></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Project</label><input type="text" id="projectNaam" class="input-field" value="..."></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Verkoper</label><input type="text" id="verkoperNaam" class="input-field" value="..."></div>
+                <div class="md:col-span-1"><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Adres</label><input type="text" id="projectAdres" class="input-field" value="..."></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Datum</label><input type="text" id="displayDate" class="input-field"></div>
                 <div>
-                    <label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">BTW Tarief</label>
-                    <select id="btwSelect" class="input-field bg-white" onchange="updateGrandTotal(); autoSave();">
-                        <option value="21">21%</option>
-                        <option value="6">6%</option>
-                        <option value="0">0% (Medecontractant / Verlegd)</option>
+                    <label class="block text-[10px] font-bold text-red-600 uppercase mb-1">BTW Tarief</label>
+                    <select id="btwSelect" class="input-field" onchange="updateGrandTotal(); autoSave();">
+                        <option value="21">21% (Standaard)</option>
+                        <option value="6">6% (Renovatie)</option>
+                        <option value="0">0% (Medecontractant)</option>
                     </select>
                 </div>
             </div>
@@ -51,384 +54,241 @@
 
         <div id="doors-container"></div>
 
-        <div class="card p-6 border-t-4 border-green-600 bg-green-50 mb-6 no-print" id="grand-total-card">
-            <h3 class="text-green-800 font-bold uppercase tracking-wider mb-4 border-b border-green-200 pb-2">Offerte Totaal Overzicht</h3>
-            <div class="flex justify-between mb-2 text-gray-700"><span>Totaal Excl. BTW:</span><span id="sumExcl" class="font-bold">€ 0,00</span></div>
-            <div class="flex justify-between mb-2 text-gray-700"><span>BTW (<span id="sumBtwLabel">21%</span>):</span><span id="sumBtw" class="font-bold">€ 0,00</span></div>
-            <div class="flex justify-between text-lg border-t border-green-200 pt-3 mt-2"><strong>Totaal Incl. BTW:</strong><strong id="sumIncl" class="text-green-700 text-xl">€ 0,00</strong></div>
+        <div class="card p-6 border-t-4 border-green-600 bg-green-50 no-print">
+            <h3 class="text-green-800 font-bold uppercase text-sm mb-4">Project Totaal</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between text-gray-600"><span>Subtotaal Excl. BTW:</span><span id="sumExcl" class="font-bold">€ 0,00</span></div>
+                <div class="flex justify-between text-gray-600"><span>BTW Bedrag:</span><span id="sumBtw" class="font-bold">€ 0,00</span></div>
+                <div class="flex justify-between text-xl border-t border-green-200 pt-3 mt-2 font-black text-green-700"><span>TOTAAL INCL. BTW:</span><span id="sumIncl">€ 0,00</span></div>
+            </div>
         </div>
 
-        <button onclick="addDoor(); autoSave();" class="no-print w-full py-4 border-2 border-dashed border-red-400 rounded-xl text-red-600 font-bold hover:bg-red-50 transition mb-20">
-            + Nieuwe deur toevoegen
+        <button onclick="addDoor(); autoSave();" class="no-print w-full py-6 border-2 border-dashed border-red-300 rounded-xl text-red-600 font-bold hover:bg-white transition-all my-10 uppercase tracking-widest text-sm">
+            + Voeg Deur Toe
         </button>
     </div>
 
     <script>
         const artikelen = [
-            {n:"39", d:"Houdmagneet 1800N – standaard toebehoren", t:1.5, p:357.81},
-            {n:"40", d:"Houdmagneet 1800 N – Z-montageconsole", t:2, p:419.58},
-            {n:"41", d:"Houdmagneet 1800 N – U-montage (Glas)", t:3, p:532.53},
-            {n:"42", d:"Houdmagneet 3000N – standaard toebehoren", t:1.5, p:335.78},
-            {n:"43", d:"Houdmagneet 3000N – L-montageconsole", t:2, p:394.00},
-            {n:"44", d:"Houdmagneet 3000N – Z-montageconsole", t:2, p:423.89},
-            {n:"45", d:"Houdmagneet 3000N – AMF-montageconsole", t:2.5, p:447.74},
-            {n:"46", d:"Houdmagneet 3000N – U-montage (Glas)", t:2, p:546.32},
-            {n:"47", d:"Deurprofielmagneet Alu 300Kg – 40cm", t:2.5, p:488.10},
-            {n:"48", d:"Deurprofielmagneet Alu 600Kg – 60cm", t:2.5, p:634.12},
-            {n:"49", d:"Deurprofielmagneet Alu 900Kg – 2,5m", t:3, p:1038.66},
-            {n:"50", d:"Motorslot EL418 – Trekker/Kruk", t:4.5, p:1798.81},
-            {n:"51", d:"Motorslot EL418 – U-Kruk", t:4.5, p:1798.81},
-            {n:"52", d:"Motorslot EL418 – Paniekbar", t:5, p:2427.87},
-            {n:"53", d:"Motorslot EL420 – Trekker/Kruk", t:4.5, p:2297.23},
-            {n:"54", d:"Motorslot EL420 – U-Kruk", t:4.5, p:2297.23},
-            {n:"55", d:"Motorslot EL420 – Paniekbar", t:4.5, p:2886.79},
-            {n:"56", d:"3-punt motorslot MP518 – Trekker/Kruk", t:5.5, p:2568.19},
-            {n:"57", d:"3-punt motorslot MP518 – U-Kruk", t:5.5, p:2568.19},
-            {n:"58", d:"3-punt motorslot MP518 – Paniekbar", t:5.5, p:3190.15},
-            {n:"59", d:"3-punt motorslot MP520 – Trekker/Kruk", t:5.5, p:2911.41},
-            {n:"60", d:"3-punt motorslot MP520 – U-Kruk", t:5.5, p:2911.41},
-            {n:"61", d:"3-punt motorslot MP520 – Paniekbar", t:5.5, p:3500.97},
-            {n:"62", d:"Solenoïde-slot EL560 (Hout/Metaal)", t:4.5, p:1208.14},
-            {n:"63", d:"Solenoïde-slot EL460 (Alu)", t:4.5, p:1323.65},
-            {n:"64", d:"Wireless slot RFID - Doorn 55 PC72", t:4, p:1611.98},
-            {n:"65", d:"Wireless slot RFID + Pinpad - 55 PC72", t:4, p:1674.05},
-            {n:"66", d:"Wireless slot RFID - Doorn 55 PC92", t:4, p:1558.78},
-            {n:"67", d:"Wireless slot RFID + Pinpad - 55 PC92", t:4, p:1725.98},
-            {n:"68", d:"Elektronische kruk (Badge)", t:1, p:771.68},
-            {n:"69", d:"Knopcilinder enkelzijdige controle 30/30", t:0, p:557.82},
-            {n:"70", d:"Knopcilinder dubbelzijdige controle 30/30", t:0, p:884.28},
-            {n:"71", d:"Halve knopcilinder 30/10", t:0, p:570.18},
-            {n:"72", d:"Online/Offline lockerslot", t:1, p:324.84},
-            {n:"73", d:"IP-HUB", t:0, p:287.77},
-            {n:"74", d:"RS485-HUB", t:0, p:200.36},
-            {n:"75", d:"Knopcilinder 30/30 - Dubbel (Variant)", t:0, p:800.51},
-            {n:"76", d:"Knopcilinder 30/30 - Enkel (Variant)", t:0, p:658.55},
-            {n:"77", d:"Halve knopcilinder 30/10 (Variant)", t:0, p:658.55},
-            {n:"78", d:"Digitaal hangslot", t:0, p:686.48},
-            {n:"79", d:"Deurbeslag variant - Enkelzijdig", t:1, p:634.67},
-            {n:"80", d:"Deurbeslag variant - Dubbelzijdig", t:1, p:1369.28},
-            {n:"81", d:"Licentie voor offline deur", t:0, p:0.00},
-            {n:"82", d:"Batterijen TYPE CR2", t:0, p:7.50},
-            {n:"83", d:"Batterijen TYPE CR123A", t:0, p:5.74},
-            {n:"84", d:"Batterijen TYPE FR6/AA", t:0, p:1.50},
-            {n:"85", d:"Batterijen TYPE CR2450", t:0, p:3.50},
-            {n:"86", d:"Mediator sluitplaat - Kruk/Slot", t:4, p:1403.20},
-            {n:"87", d:"Mediator sluitplaat - Paniekbar", t:3, p:2008.21},
-            {n:"88", d:"Elektr. sluitplaat Fail Secure", t:2, p:486.53},
-            {n:"89", d:"Elektr. sluitplaat Fail Safe", t:2, p:589.67},
-            {n:"90", d:"TS 73 Deurafsluiter (Schaararm)", t:1.5, p:237.19},
-            {n:"91", d:"TS 83 Deurafsluiter (Schaararm)", t:1.5, p:259.77},
-            {n:"92", d:"TS 92 Glijarm-deurafsluiter", t:1.5, p:298.69},
-            {n:"93", d:"TS 93 Glijarm-deurafsluiter", t:1, p:362.24},
-            {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00}
+            {n:"39", d:"Houdmagneet 1800N – standaard toebehoren", t:1.5, p:357.81}, {n:"40", d:"Houdmagneet 1800 N – Z-montageconsole", t:2, p:419.58},
+            {n:"41", d:"Houdmagneet 1800 N – U-montage (Glas)", t:3, p:532.53}, {n:"42", d:"Houdmagneet 3000N – standaard toebehoren", t:1.5, p:335.78},
+            {n:"43", d:"Houdmagneet 3000N – L-montageconsole", t:2, p:394.00}, {n:"44", d:"Houdmagneet 3000N – Z-montageconsole", t:2, p:423.89},
+            {n:"45", d:"Houdmagneet 3000N – AMF-montageconsole", t:2.5, p:447.74}, {n:"46", d:"Houdmagneet 3000N – U-montage (Glas)", t:2, p:546.32},
+            {n:"47", d:"Deurprofielmagneet Alu 300Kg – 40cm", t:2.5, p:488.10}, {n:"48", d:"Deurprofielmagneet Alu 600Kg – 60cm", t:2.5, p:634.12},
+            {n:"49", d:"Deurprofielmagneet Alu 900Kg – 2,5m", t:3, p:1038.66}, {n:"50", d:"Motorslot EL418 – Trekker/Kruk", t:4.5, p:1798.81},
+            {n:"51", d:"Motorslot EL418 – U-Kruk", t:4.5, p:1798.81}, {n:"52", d:"Motorslot EL418 – Paniekbar", t:5, p:2427.87},
+            {n:"53", d:"Motorslot EL420 – Trekker/Kruk", t:4.5, p:2297.23}, {n:"54", d:"Motorslot EL420 – U-Kruk", t:4.5, p:2297.23},
+            {n:"55", d:"Motorslot EL420 – Paniekbar", t:4.5, p:2886.79}, {n:"56", d:"3-punt motorslot MP518 – Trekker/Kruk", t:5.5, p:2568.19},
+            {n:"57", d:"3-punt motorslot MP518 – U-Kruk", t:5.5, p:2568.19}, {n:"58", d:"3-punt motorslot MP518 – Paniekbar", t:5.5, p:3190.15},
+            {n:"59", d:"3-punt motorslot MP520 – Trekker/Kruk", t:5.5, p:2911.41}, {n:"60", d:"3-punt motorslot MP520 – U-Kruk", t:5.5, p:2911.41},
+            {n:"61", d:"3-punt motorslot MP520 – Paniekbar", t:5.5, p:3500.97}, {n:"62", d:"Solenoïde-slot EL560 (Hout/Metaal)", t:4.5, p:1208.14},
+            {n:"63", d:"Solenoïde-slot EL460 (Alu)", t:4.5, p:1323.65}, {n:"64", d:"Wireless slot RFID - Doorn 55 PC72", t:4, p:1611.98},
+            {n:"65", d:"Wireless slot RFID + Pinpad - 55 PC72", t:4, p:1674.05}, {n:"66", d:"Wireless slot RFID - Doorn 55 PC92", t:4, p:1558.78},
+            {n:"67", d:"Wireless slot RFID + Pinpad - 55 PC92", t:4, p:1725.98}, {n:"68", d:"Elektronische kruk (Badge)", t:1, p:771.68},
+            {n:"69", d:"Knopcilinder enkelzijdige controle 30/30", t:0, p:557.82}, {n:"70", d:"Knopcilinder dubbelzijdige controle 30/30", t:0, p:884.28},
+            {n:"71", d:"Halve knopcilinder 30/10", t:0, p:570.18}, {n:"72", d:"Online/Offline lockerslot", t:1, p:324.84},
+            {n:"73", d:"IP-HUB", t:0, p:287.77}, {n:"74", d:"RS485-HUB", t:0, p:200.36},
+            {n:"75", d:"Knopcilinder 30/30 - Dubbel (Variant)", t:0, p:800.51}, {n:"76", d:"Knopcilinder 30/30 - Enkel (Variant)", t:0, p:658.55},
+            {n:"77", d:"Halve knopcilinder 30/10 (Variant)", t:0, p:658.55}, {n:"78", d:"Digitaal hangslot", t:0, p:686.48},
+            {n:"79", d:"Deurbeslag variant - Enkelzijdig", t:1, p:634.67}, {n:"80", d:"Deurbeslag variant - Dubbelzijdig", t:1, p:1369.28},
+            {n:"81", d:"Licentie voor offline deur", t:0, p:0.00}, {n:"82", d:"Batterijen TYPE CR2", t:0, p:7.50},
+            {n:"83", d:"Batterijen TYPE CR123A", t:0, p:5.74}, {n:"84", d:"Batterijen TYPE FR6/AA", t:0, p:1.50},
+            {n:"85", d:"Batterijen TYPE CR2450", t:0, p:3.50}, {n:"86", d:"Mediator sluitplaat - Kruk/Slot", t:4, p:1403.20},
+            {n:"87", d:"Mediator sluitplaat - Paniekbar", t:3, p:2008.21}, {n:"88", d:"Elektr. sluitplaat Fail Secure", t:2, p:486.53},
+            {n:"89", d:"Elektr. sluitplaat Fail Safe", t:2, p:589.67}, {n:"90", d:"TS 73 Deurafsluiter (Schaararm)", t:1.5, p:237.19},
+            {n:"91", d:"TS 83 Deurafsluiter (Schaararm)", t:1.5, p:259.77}, {n:"92", d:"TS 92 Glijarm-deurafsluiter", t:1.5, p:298.69},
+            {n:"93", d:"TS 93 Glijarm-deurafsluiter", t:1, p:362.24}, {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00}
         ];
-
-        function reindexDoors() {
-            document.querySelectorAll('.door-badge-num').forEach((badge, index) => { badge.innerText = index + 1; });
-            updateGrandTotal();
-        }
-
-        function updateDoorTitle(input) {
-            const label = input.closest('.door-section').querySelector('.door-title-text');
-            const val = input.value.trim();
-            label.innerText = (val && val !== '...') ? `DEUR: ${val}` : "Klap Open/Toe";
-        }
-
-        function updateGrandTotal() {
-            let totalExcl = 0;
-            document.querySelectorAll('.art-check:checked').forEach(cb => {
-                totalExcl += parseFloat(cb.dataset.p) || 0;
-            });
-
-            const btwSelect = document.getElementById('btwSelect');
-            const btwPerc = parseFloat(btwSelect.value) || 0;
-            const btwAmount = totalExcl * (btwPerc / 100);
-            const totalIncl = totalExcl + btwAmount;
-
-            document.getElementById('sumExcl').innerText = `€ ${totalExcl.toFixed(2).replace('.', ',')}`;
-            document.getElementById('sumBtwLabel').innerText = btwSelect.options[btwSelect.selectedIndex].text;
-            document.getElementById('sumBtw').innerText = `€ ${btwAmount.toFixed(2).replace('.', ',')}`;
-            document.getElementById('sumIncl').innerText = `€ ${totalIncl.toFixed(2).replace('.', ',')}`;
-        }
-
-        function calculateTotals(el) {
-            const section = el.closest('.door-section');
-            const checkboxes = section.querySelectorAll('.art-check:checked');
-            let totalHours = 0; let totalPrice = 0;
-            checkboxes.forEach(cb => {
-                totalHours += parseFloat(cb.dataset.t) || 0;
-                totalPrice += parseFloat(cb.dataset.p) || 0;
-            });
-            const hoursInput = section.querySelector('.door-hours');
-            if (totalHours > 0) {
-                let h = Math.floor(totalHours); let m = Math.round((totalHours - h) * 60);
-                hoursInput.value = `${h} uur ${m > 0 ? m + ' min' : ''}`.trim();
-            } else { hoursInput.value = '...'; }
-            const priceInput = section.querySelector('.door-price');
-            priceInput.value = totalPrice > 0 ? `€ ${totalPrice.toFixed(2).replace('.', ',')}` : '...';
-            
-            updateGrandTotal();
-        }
 
         function addDoor(data = null) {
             const container = document.getElementById('doors-container');
             const div = document.createElement('div');
             const timestamp = Date.now();
-            div.className = "card door-section overflow-hidden relative";
+            div.className = "card door-section overflow-hidden";
             div.innerHTML = `
                 <div class="no-print bg-red-50 p-3 flex justify-between items-center cursor-pointer border-b border-red-100" onclick="this.parentElement.classList.toggle('collapsed')">
-                    <div class="flex items-center gap-3">
-                        <span class="door-badge-num bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shadow-sm">0</span>
-                        <span class="door-title-text text-red-700 font-bold uppercase text-xs tracking-wider italic">Klap Open/Toe</span>
-                    </div>
-                    <button onclick="event.stopPropagation(); this.closest('.door-section').remove(); reindexDoors(); autoSave();" class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-800 shadow-sm">Verwijder</button>
+                    <span class="door-title-text text-red-700 font-bold uppercase text-xs">DEUR: ...</span>
+                    <button onclick="event.stopPropagation(); this.closest('.door-section').remove(); updateGrandTotal(); autoSave();" class="text-xs bg-red-600 text-white px-2 py-1 rounded">Verwijder</button>
                 </div>
                 <div class="door-content p-6">
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Plaats</label><input type="text" class="input-field door-loc" value="..." oninput="updateDoorTitle(this); autoSave()"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Type Deur</label><input type="text" class="input-field door-type" value="..." oninput="autoSave()"></div>
+                        <input type="text" class="input-field door-loc" placeholder="Locatie (inkom, garage...)" oninput="updateDoorTitle(this)">
+                        <input type="text" class="input-field door-type" placeholder="Type deur">
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mb-4 border-y border-red-50 py-4 max-h-96 overflow-y-auto">
-                        ${artikelen.map(a => `
-                            <label class="flex items-center gap-2 text-[11px] hover:bg-red-50 rounded p-1 cursor-pointer">
-                                <input type="checkbox" class="art-check" data-n="${a.n}" data-t="${a.t}" data-p="${a.p}" onchange="calculateTotals(this); autoSave()"> 
-                                <span class="flex-1"><strong>${a.n}</strong> - ${a.d}</span>
-                                <span class="text-green-700 font-bold">€ ${a.p.toFixed(2).replace('.', ',')}</span>
-                            </label>`).join('')}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-1 mb-4 border-y py-4 max-h-60 overflow-y-auto">
+                        ${artikelen.map(a => `<label class="flex items-center gap-2 text-[11px] hover:bg-red-50 p-1"><input type="checkbox" class="art-check" data-n="${a.n}" data-p="${a.p}" onchange="calculateDoorTotal(this)"> ${a.n} - ${a.d} <b class="ml-auto">€${a.p.toFixed(2)}</b></label>`).join('')}
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Werkuren (Interne Calculatie)</label><input type="text" class="input-field door-hours" value="..." readonly></div>
-                        <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Totaal Deur (Excl. BTW)</label><input type="text" class="input-field door-price text-green-700 font-bold" value="..." readonly></div>
+                    <div class="flex justify-between items-center mb-4 bg-gray-50 p-3 rounded">
+                        <span class="text-xs font-bold uppercase text-gray-500">Totaal deze deur:</span>
+                        <input type="text" class="door-price font-bold text-red-600 bg-transparent border-none text-right" value="€ 0,00" readonly>
                     </div>
-                    <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Opmerkingen</label><input type="text" class="input-field door-notes" value="..." oninput="autoSave()"></div>
-                    
-                    <div class="no-print mt-6 bg-red-50 p-4 rounded-lg border border-dashed border-red-200">
-                        <label class="block text-[10px] font-bold text-red-700 uppercase mb-2">Foto's & Camera:</label>
-                        <div class="flex gap-2">
-                            <input type="file" multiple accept="image/*" class="hidden" id="file-${timestamp}" onchange="handleImgs(event, this)">
-                            <button onclick="document.getElementById('file-${timestamp}').click()" class="action-button bg-slate-800 text-white text-[11px]">📂 Foto's Toevoegen</button>
-                            
-                            <input type="file" accept="image/*" capture="environment" class="hidden" id="cam-${timestamp}" onchange="handleImgs(event, this)">
-                            <button onclick="document.getElementById('cam-${timestamp}').click()" class="action-button bg-red-600 text-white text-[11px]">📸 Camera</button>
-                        </div>
-                        <div class="photo-area flex flex-wrap mt-3"></div>
+                    <textarea class="input-field door-notes mb-4" placeholder="Opmerkingen..."></textarea>
+                    <div class="no-print">
+                        <input type="file" multiple accept="image/*" class="hidden" id="f-${timestamp}" onchange="handlePhotos(event, this)">
+                        <button onclick="document.getElementById('f-${timestamp}').click()" class="action-button bg-slate-100 text-slate-700 text-[11px] w-full border border-slate-300">📸 Voeg Foto's Toe</button>
+                        <div class="photo-area flex flex-wrap mt-2"></div>
                     </div>
-                </div>
-            `;
-            // Deur invoegen boven het Totaal blok
+                </div>`;
             container.appendChild(div);
-            if(data) fillDoorData(div, data);
-            reindexDoors();
+            if(data) fillDoor(div, data);
+            updateGrandTotal();
         }
 
-        function handleImgs(e, input) {
+        function updateDoorTitle(input) { input.closest('.door-section').querySelector('.door-title-text').innerText = "DEUR: " + (input.value || "..."); }
+
+        function calculateDoorTotal(el) {
+            const section = el.closest('.door-section');
+            let t = 0;
+            section.querySelectorAll('.art-check:checked').forEach(c => t += parseFloat(c.dataset.p));
+            section.querySelector('.door-price').value = `€ ${t.toFixed(2).replace('.', ',')}`;
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+            let total = 0;
+            document.querySelectorAll('.art-check:checked').forEach(c => total += parseFloat(c.dataset.p));
+            const btw = parseFloat(document.getElementById('btwSelect').value) / 100;
+            const btwAmt = total * btw;
+            document.getElementById('sumExcl').innerText = `€ ${total.toFixed(2).replace('.', ',')}`;
+            document.getElementById('sumBtw').innerText = `€ ${btwAmt.toFixed(2).replace('.', ',')}`;
+            document.getElementById('sumIncl').innerText = `€ ${(total + btwAmt).toFixed(2).replace('.', ',')}`;
+        }
+
+        function handlePhotos(e, input) {
             const area = input.closest('.door-section').querySelector('.photo-area');
-            Array.from(e.target.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = res => {
-                    const imgDiv = document.createElement('div');
-                    imgDiv.className = "relative inline-block";
-                    imgDiv.innerHTML = `<img src="${res.target.result}" class="photo-preview-img shadow-md"><button onclick="this.parentElement.remove(); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
-                    area.appendChild(imgDiv);
-                    autoSave();
+            Array.from(e.target.files).forEach(f => {
+                const r = new FileReader();
+                r.onload = ev => {
+                    const d = document.createElement('div'); d.className = "relative";
+                    d.innerHTML = `<img src="${ev.target.result}" class="photo-preview-img"><button onclick="this.parentElement.remove(); autoSave();" class="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
+                    area.appendChild(d); autoSave();
                 };
-                reader.readAsDataURL(file);
+                r.readAsDataURL(f);
             });
-        }
-
-        function fillDoorData(div, d) {
-            div.querySelector('.door-loc').value = d.location || '...';
-            div.querySelector('.door-type').value = d.type || '...';
-            div.querySelector('.door-notes').value = d.notes || '...';
-            if(d.items) d.items.forEach(n => {
-                const cb = div.querySelector(`.art-check[data-n="${n}"]`);
-                if(cb) cb.checked = true;
-            });
-            calculateTotals(div.querySelector('.art-check'));
-            if(d.photos) {
-                const area = div.querySelector('.photo-area');
-                d.photos.forEach(src => {
-                    const imgDiv = document.createElement('div');
-                    imgDiv.className = "relative inline-block";
-                    imgDiv.innerHTML = `<img src="${src}" class="photo-preview-img shadow-md"><button onclick="this.parentElement.remove(); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
-                    area.appendChild(imgDiv);
-                });
-            }
         }
 
         function getFormData() {
             return {
-                header: { 
-                    klant: document.getElementById('klantNaam').value, 
-                    project: document.getElementById('projectNaam').value, 
-                    verkoper: document.getElementById('verkoperNaam').value, 
-                    adres: document.getElementById('projectAdres').value, 
-                    datum: document.getElementById('displayDate').value,
-                    btw: document.getElementById('btwSelect').value
-                },
+                h: { k: document.getElementById('klantNaam').value, p: document.getElementById('projectNaam').value, v: document.getElementById('verkoperNaam').value, a: document.getElementById('projectAdres').value, d: document.getElementById('displayDate').value, b: document.getElementById('btwSelect').value },
                 doors: Array.from(document.querySelectorAll('.door-section')).map(s => ({
-                    location: s.querySelector('.door-loc').value,
-                    type: s.querySelector('.door-type').value,
-                    hours: s.querySelector('.door-hours').value,
-                    totalPrice: s.querySelector('.door-price').value,
-                    notes: s.querySelector('.door-notes').value,
+                    l: s.querySelector('.door-loc').value, t: s.querySelector('.door-type').value, n: s.querySelector('.door-notes').value, p: s.querySelector('.door-price').value,
                     items: Array.from(s.querySelectorAll('.art-check:checked')).map(c => c.dataset.n),
-                    photos: Array.from(s.querySelectorAll('.photo-preview-img')).map(img => img.src)
+                    imgs: Array.from(s.querySelectorAll('.photo-preview-img')).map(i => i.src)
                 }))
             };
         }
 
-        function autoSave() { localStorage.setItem('inbraakveilig_v3_autosave', JSON.stringify(getFormData())); }
-        
-        function clearForm() { if(confirm("Offerte volledig wissen?")) { localStorage.removeItem('inbraakveilig_v3_autosave'); location.reload(); } }
+        function fillDoor(div, d) {
+            div.querySelector('.door-loc').value = d.l; updateDoorTitle(div.querySelector('.door-loc'));
+            div.querySelector('.door-type').value = d.t; div.querySelector('.door-notes').value = d.n;
+            d.items.forEach(n => { const cb = div.querySelector(`.art-check[data-n="${n}"]`); if(cb) cb.checked = true; });
+            d.imgs.forEach(src => {
+                const imgD = document.createElement('div'); imgD.className = "relative";
+                imgD.innerHTML = `<img src="${src}" class="photo-preview-img"><button onclick="this.parentElement.remove(); autoSave();" class="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
+                div.querySelector('.photo-area').appendChild(imgD);
+            });
+            calculateDoorTotal(div.querySelector('.art-check'));
+        }
 
-        // SLIMME EXPORT KNOP HIER
+        function autoSave() { localStorage.setItem('ib_save', JSON.stringify(getFormData())); }
+
         function exportHTML() {
-            const data = getFormData();
-            // Data verstoppen in de script tag bovenaan de pagina
-            document.getElementById('saved-data').textContent = JSON.stringify(data);
-            
-            // Volledige HTML opvragen en downloaden
-            const htmlContent = "<!DOCTYPE html>\n<html lang=\"nl\">\n" + document.documentElement.outerHTML + "\n</html>";
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([htmlContent], {type: 'text/html'}));
-            a.download = `Offerte_${data.header.klant !== '...' ? data.header.klant : 'Nieuw'}.html`; 
-            a.click();
+            document.getElementById('saved-data').textContent = JSON.stringify(getFormData());
+            const blob = new Blob(["<!DOCTYPE html>\n" + document.documentElement.outerHTML], {type: 'text/html'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Inbraakveilig_${document.getElementById('klantNaam').value}.html`; a.click();
         }
 
-        // SLIMME IMPORT KNOP HIER
-        function loadFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => { 
-                const content = e.target.result;
-                let parsedData = null;
-                
-                // Ondersteunt zowel oude JSON als nieuwe HTML
-                if (file.name.endsWith('.html')) {
-                    const match = content.match(/<script id="saved-data" type="application\/json">([\s\S]*?)<\/script>/);
-                    if (match && match[1] && match[1].trim() !== '{}') {
-                        parsedData = JSON.parse(match[1]);
-                    } else { alert("Geen data gevonden in dit HTML bestand."); }
-                } else {
-                    parsedData = JSON.parse(content);
-                }
-
-                if(parsedData) {
-                    renderData(parsedData); 
-                    autoSave(); 
-                }
+        function loadFromFile(e) {
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader();
+            r.onload = ev => {
+                let d = null;
+                if(f.name.endsWith('.html')) {
+                    const m = ev.target.result.match(/<script id="saved-data" type="application\/json">([\s\S]*?)<\/script>/);
+                    if(m) d = JSON.parse(m[1]);
+                } else d = JSON.parse(ev.target.result);
+                if(d) render(d);
             };
-            reader.readAsText(file);
+            r.readAsText(f);
         }
 
-        function renderData(data) {
-            document.getElementById('klantNaam').value = data.header.klant;
-            document.getElementById('projectNaam').value = data.header.project;
-            document.getElementById('verkoperNaam').value = data.header.verkoper;
-            document.getElementById('projectAdres').value = data.header.adres;
-            document.getElementById('displayDate').value = data.header.datum;
-            if (data.header.btw) document.getElementById('btwSelect').value = data.header.btw;
-            
+        function render(d) {
+            document.getElementById('klantNaam').value = d.h.k; document.getElementById('projectNaam').value = d.h.p;
+            document.getElementById('verkoperNaam').value = d.h.v; document.getElementById('projectAdres').value = d.h.a;
+            document.getElementById('displayDate').value = d.h.d; document.getElementById('btwSelect').value = d.h.b;
             document.getElementById('doors-container').innerHTML = '';
-            if(data.doors) data.doors.forEach(d => addDoor(d));
-            
+            d.doors.forEach(door => addDoor(door));
             updateGrandTotal();
         }
 
         function generateProfessionalPDF() {
-            const element = document.createElement('div');
             const data = getFormData();
+            const el = document.createElement('div');
+            el.style.width = "210mm";
             
-            let content = `<div style="font-family:sans-serif; padding:20px;">
-                <div style="border:4px solid #dc2626; padding:20px; margin-bottom:30px; display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div>
-                        <h1 style="color:#dc2626; margin:0; text-transform:uppercase; font-size:28px;">INBRAAKVEILIG</h1>
-                        <p style="margin:5px 0; font-size:16px;"><strong>Offerte & Opmetingsverslag</strong></p>
-                    </div>
-                    <div style="text-align:right; font-size:12px; line-height:1.5;">
-                        <p style="margin:0;">BTW: BE 0660.598.308</p>
-                        <p style="margin:0;">Tel: 052 22 21 35</p>
-                    </div>
-                </div>
-
-                <div style="background:#fef2f2; padding:15px; border-radius:8px; margin-bottom:30px; font-size:13px;">
-                    <p style="margin:0 0 5px 0;"><strong>Klant:</strong> ${data.header.klant} &nbsp;|&nbsp; <strong>Project:</strong> ${data.header.project}</p>
-                    <p style="margin:0;"><strong>Adres:</strong> ${data.header.adres} &nbsp;|&nbsp; <strong>Datum:</strong> ${data.header.datum}</p>
-                </div>`;
-
-            // Deuren blok
+            let c = `<div style="font-family: 'Inter', sans-serif; color: #1e293b;">`;
+            
             data.doors.forEach((d, i) => {
-                content += `<div style="border:1px solid #ccc; margin-bottom:30px; page-break-inside: avoid; border-radius:10px; overflow:hidden;">
-                    <div style="background:#dc2626; color:white; padding:10px; font-weight:bold;">DEUR ${i+1}: ${d.location}</div>
-                    <div style="padding:15px;">
-                        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                            ${d.items.map(n => {
-                                const art = artikelen.find(a => a.n === n);
-                                return `<tr><td style="padding:5px; border-bottom:1px solid #eee;">${art.n} - ${art.d}</td><td style="text-align:right;">€ ${art.p.toFixed(2).replace('.', ',')}</td></tr>`;
-                            }).join('')}
-                        </table>
-                        <div style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:5px;">
-                            <p><strong>Totaal Deur: <span style="color:#15803d;">${d.totalPrice}</span></strong></p>
-                            <p><strong>Nota:</strong> ${d.notes}</p>
+                const pageBreak = i > 0 ? 'page-break-before: always; padding-top: 20mm;' : '';
+                c += `<div style="${pageBreak} padding: 15mm; min-height: 260mm;">
+                    ${i === 0 ? `
+                        <div style="border: 4px solid #dc2626; padding: 15px; display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <div><h1 style="color:#dc2626; margin:0; font-size:24px; font-weight:800;">INBRAAKVEILIG</h1><p style="margin:0; font-weight:600;">Offerte & Opmetingsverslag</p></div>
+                            <div style="text-align:right; font-size:10px;">BTW BE 0660.598.308<br>Tel: 052 22 21 35</div>
                         </div>
-                    </div>`;
-                if(d.photos && d.photos.length > 0) {
-                    content += `<div style="padding:15px; display:flex; flex-wrap:wrap; gap:10px; background:#f0f0f0;">`;
-                    d.photos.forEach(src => content += `<img src="${src}" style="width:45%; max-height:250px; object-fit:cover; border-radius:5px;">`);
-                    content += `</div>`;
-                }
-                content += `</div>`;
+                        <div style="background:#fef2f2; padding:15px; border-radius:8px; font-size:12px; margin-bottom:20px; border: 1px solid #fecaca;">
+                            <strong>Klant:</strong> ${data.h.k} | <strong>Project:</strong> ${data.h.p}<br>
+                            <strong>Adres:</strong> ${data.h.a} | <strong>Datum:</strong> ${data.h.d}
+                        </div>` : ''}
+                    
+                    <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
+                        <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; text-transform:uppercase; font-size:14px;">DEUR ${i+1}: ${d.l} (${d.t})</div>
+                        <div style="padding:15px;">
+                            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+                                <tr style="border-bottom: 2px solid #dc2626; text-align:left;"><th style="padding:5px;">Omschrijving</th><th style="text-align:right;">Prijs</th></tr>
+                                ${d.items.map(n => {
+                                    const art = artikelen.find(a => a.n === n);
+                                    return `<tr><td style="padding:5px; border-bottom:1px solid #f1f5f9;">${art.n} - ${art.d}</td><td style="text-align:right;">€ ${art.p.toFixed(2)}</td></tr>`;
+                                }).join('')}
+                            </table>
+                            <div style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:5px;">
+                                <p style="margin:0; font-weight:800; color:#dc2626;">Totaal Deur: ${d.p}</p>
+                                <p style="margin:5px 0 0 0; font-size:10px;"><b>Nota:</b> ${d.n}</p>
+                            </div>
+                        </div>
+                        <div style="padding: 0 15px 15px 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            ${d.imgs.map(src => `<img src="${src}" style="width:100%; height:180px; object-fit:cover; border-radius:5px; border:1px solid #e2e8f0;">`).join('')}
+                        </div>
+                    </div>
+                </div>`;
             });
 
-            // Offerte Totaal Blok
-            content += `
-                <div style="margin-top:40px; border:2px solid #15803d; border-radius:8px; padding:20px; page-break-inside:avoid; width:350px; margin-left:auto; background:#f0fdf4;">
-                    <h3 style="color:#15803d; margin-top:0; border-bottom:1px solid #15803d; padding-bottom:10px; text-transform:uppercase;">Offerte Totaal</h3>
-                    <table style="width:100%; font-size:14px; text-align:right;">
-                        <tr><td style="text-align:left; padding-bottom:5px;">Totaal Excl. BTW:</td><td>${document.getElementById('sumExcl').innerText}</td></tr>
-                        <tr><td style="text-align:left; padding-bottom:5px;">BTW (${document.getElementById('sumBtwLabel').innerText}):</td><td>${document.getElementById('sumBtw').innerText}</td></tr>
-                        <tr style="font-weight:bold; font-size:18px; color:#15803d;">
-                            <td style="text-align:left; padding-top:10px; border-top:2px solid #15803d;">Totaal Incl. BTW:</td>
-                            <td style="padding-top:10px; border-top:2px solid #15803d;">${document.getElementById('sumIncl').innerText}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>`;
-
-            element.innerHTML = content;
-            html2pdf().from(element).set({ margin: 5, filename: `Offerte_${data.header.klant}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
+            c += `<div style="page-break-before: always; padding: 20mm;">
+                    <div style="border: 2px solid #15803d; background: #f0fdf4; padding: 30px; border-radius: 12px; max-width: 400px; margin-left: auto;">
+                        <h2 style="color:#15803d; margin-top:0; border-bottom: 2px solid #15803d; padding-bottom:10px;">OVERZICHT TOTAAL</h2>
+                        <table style="width:100%; font-size:14px;">
+                            <tr><td>Excl. BTW:</td><td style="text-align:right;">${document.getElementById('sumExcl').innerText}</td></tr>
+                            <tr><td>BTW Bedrag:</td><td style="text-align:right;">${document.getElementById('sumBtw').innerText}</td></tr>
+                            <tr style="font-size:20px; font-weight:900; color:#15803d;"><td>TOTAAL:</td><td style="text-align:right;">${document.getElementById('sumIncl').innerText}</td></tr>
+                        </table>
+                    </div>
+                </div></div>`;
+            
+            el.innerHTML = c;
+            html2pdf().from(el).set({ margin:0, filename: `Offerte_${data.h.k}.pdf`, html2canvas:{scale:2}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} }).save();
         }
 
         window.onload = () => {
-            // Slimme laadfunctie: checkt eerst of het bestand data bevat
-            const embeddedData = document.getElementById('saved-data').textContent;
-            
-            if (embeddedData && embeddedData.trim() !== "{}" && embeddedData.trim() !== "") {
-                renderData(JSON.parse(embeddedData));
-            } else {
-                const saved = localStorage.getItem('inbraakveilig_v3_autosave');
-                if (saved) renderData(JSON.parse(saved));
-                else { 
-                    const d = new Date(); 
-                    document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-                    addDoor(); 
-                }
+            const eb = document.getElementById('saved-data').textContent;
+            if(eb && eb !== "{}" && eb !== "") render(JSON.parse(eb));
+            else {
+                const s = localStorage.getItem('ib_save');
+                if(s) render(JSON.parse(s));
+                else { const d = new Date(); document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; addDoor(); }
             }
-
-            document.addEventListener('focusin', e => {
-                if (e.target.tagName === 'INPUT' && e.target.value === '...') e.target.value = '';
-            });
-
-            document.addEventListener('focusout', e => {
-                if (e.target.tagName === 'INPUT' && e.target.value.trim() === '') {
-                    e.target.value = '...';
-                    if (e.target.classList.contains('door-loc')) updateDoorTitle(e.target);
-                    autoSave();
-                }
-            });
         };
+        
+        function clearForm() { if(confirm("Volledig wissen?")) { localStorage.removeItem('ib_save'); location.reload(); } }
     </script>
 </body>
 </html>
