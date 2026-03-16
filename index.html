@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbraakveilig Opmetingsformulier V2.2</title>
+    <title>Inbraakveilig-Opmetingsblad-Alertis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script id="saved-data" type="application/json">{}</script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #fef2f2; padding: 20px; }
@@ -21,11 +22,11 @@
 <body oninput="autoSave()">
 
     <div class="max-w-5xl mx-auto">
-        <div class="no-print mb-8 p-4 bg-white rounded-xl shadow-lg border border-red-200 flex flex-wrap gap-3 items-center">
+        <div class="no-print mb-8 p-4 bg-white rounded-xl shadow-lg border border-red-200 flex flex-wrap gap-3 items-center sticky top-4 z-50">
             <h2 class="text-red-700 font-bold mr-4 uppercase tracking-wider">Inbraakveilig</h2>
-            <button onclick="saveToFile()" class="action-button bg-slate-800 text-white hover:bg-black">💾 Export JSON</button>
-            <label class="action-button bg-slate-800 text-white hover:bg-black cursor-pointer">📂 Import JSON <input type="file" class="hidden" onchange="loadFromFile(event)"></label>
-            <button onclick="generateProfessionalPDF()" class="action-button bg-red-600 text-white hover:bg-red-700">📄 Genereer PDF</button>
+            <button onclick="exportHTML()" class="action-button bg-slate-800 text-white hover:bg-black">💾 Sla Bewerkbaar Bestand Op</button>
+            <label class="action-button bg-slate-800 text-white hover:bg-black cursor-pointer">📂 Open Bestand <input type="file" accept=".html,.json" class="hidden" onchange="loadFromFile(event)"></label>
+            <button onclick="generateProfessionalPDF()" class="action-button bg-red-600 text-white hover:bg-red-700">📄 Genereer Offerte (PDF)</button>
             <a href="https://www.adobe.com/be_nl/acrobat/online/pdf-to-word.html" target="_blank" class="action-button bg-blue-600 text-white hover:bg-blue-700">🔄 Naar Word (Adobe)</a>
             <button onclick="clearForm()" class="action-button bg-gray-500 text-white hover:bg-gray-700">🗑️ Wis alles</button>
         </div>
@@ -35,12 +36,27 @@
                 <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Klant</label><input type="text" id="klantNaam" class="input-field" value="..."></div>
                 <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Project</label><input type="text" id="projectNaam" class="input-field" value="..."></div>
                 <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Verkoper</label><input type="text" id="verkoperNaam" class="input-field" value="..."></div>
-                <div class="md:col-span-2"><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Adres Project</label><input type="text" id="projectAdres" class="input-field" value="..."></div>
+                <div class="md:col-span-1"><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Adres Project</label><input type="text" id="projectAdres" class="input-field" value="..."></div>
                 <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Datum</label><input type="text" id="displayDate" class="input-field"></div>
+                <div>
+                    <label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">BTW Tarief</label>
+                    <select id="btwSelect" class="input-field bg-white" onchange="updateGrandTotal(); autoSave();">
+                        <option value="21">21%</option>
+                        <option value="6">6%</option>
+                        <option value="0">0% (Medecontractant / Verlegd)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
         <div id="doors-container"></div>
+
+        <div class="card p-6 border-t-4 border-green-600 bg-green-50 mb-6 no-print" id="grand-total-card">
+            <h3 class="text-green-800 font-bold uppercase tracking-wider mb-4 border-b border-green-200 pb-2">Offerte Totaal Overzicht</h3>
+            <div class="flex justify-between mb-2 text-gray-700"><span>Totaal Excl. BTW:</span><span id="sumExcl" class="font-bold">€ 0,00</span></div>
+            <div class="flex justify-between mb-2 text-gray-700"><span>BTW (<span id="sumBtwLabel">21%</span>):</span><span id="sumBtw" class="font-bold">€ 0,00</span></div>
+            <div class="flex justify-between text-lg border-t border-green-200 pt-3 mt-2"><strong>Totaal Incl. BTW:</strong><strong id="sumIncl" class="text-green-700 text-xl">€ 0,00</strong></div>
+        </div>
 
         <button onclick="addDoor(); autoSave();" class="no-print w-full py-4 border-2 border-dashed border-red-400 rounded-xl text-red-600 font-bold hover:bg-red-50 transition mb-20">
             + Nieuwe deur toevoegen
@@ -109,12 +125,30 @@
 
         function reindexDoors() {
             document.querySelectorAll('.door-badge-num').forEach((badge, index) => { badge.innerText = index + 1; });
+            updateGrandTotal();
         }
 
         function updateDoorTitle(input) {
             const label = input.closest('.door-section').querySelector('.door-title-text');
             const val = input.value.trim();
             label.innerText = (val && val !== '...') ? `DEUR: ${val}` : "Klap Open/Toe";
+        }
+
+        function updateGrandTotal() {
+            let totalExcl = 0;
+            document.querySelectorAll('.art-check:checked').forEach(cb => {
+                totalExcl += parseFloat(cb.dataset.p) || 0;
+            });
+
+            const btwSelect = document.getElementById('btwSelect');
+            const btwPerc = parseFloat(btwSelect.value) || 0;
+            const btwAmount = totalExcl * (btwPerc / 100);
+            const totalIncl = totalExcl + btwAmount;
+
+            document.getElementById('sumExcl').innerText = `€ ${totalExcl.toFixed(2).replace('.', ',')}`;
+            document.getElementById('sumBtwLabel').innerText = btwSelect.options[btwSelect.selectedIndex].text;
+            document.getElementById('sumBtw').innerText = `€ ${btwAmount.toFixed(2).replace('.', ',')}`;
+            document.getElementById('sumIncl').innerText = `€ ${totalIncl.toFixed(2).replace('.', ',')}`;
         }
 
         function calculateTotals(el) {
@@ -132,6 +166,8 @@
             } else { hoursInput.value = '...'; }
             const priceInput = section.querySelector('.door-price');
             priceInput.value = totalPrice > 0 ? `€ ${totalPrice.toFixed(2).replace('.', ',')}` : '...';
+            
+            updateGrandTotal();
         }
 
         function addDoor(data = null) {
@@ -179,6 +215,7 @@
                     </div>
                 </div>
             `;
+            // Deur invoegen boven het Totaal blok
             container.appendChild(div);
             if(data) fillDoorData(div, data);
             reindexDoors();
@@ -221,7 +258,14 @@
 
         function getFormData() {
             return {
-                header: { klant: document.getElementById('klantNaam').value, project: document.getElementById('projectNaam').value, verkoper: document.getElementById('verkoperNaam').value, adres: document.getElementById('projectAdres').value, datum: document.getElementById('displayDate').value },
+                header: { 
+                    klant: document.getElementById('klantNaam').value, 
+                    project: document.getElementById('projectNaam').value, 
+                    verkoper: document.getElementById('verkoperNaam').value, 
+                    adres: document.getElementById('projectAdres').value, 
+                    datum: document.getElementById('displayDate').value,
+                    btw: document.getElementById('btwSelect').value
+                },
                 doors: Array.from(document.querySelectorAll('.door-section')).map(s => ({
                     location: s.querySelector('.door-loc').value,
                     type: s.querySelector('.door-type').value,
@@ -234,38 +278,87 @@
             };
         }
 
-        function autoSave() { localStorage.setItem('inbraakveilig_v2_autosave', JSON.stringify(getFormData())); }
-        function clearForm() { if(confirm("Formulier wissen?")) { localStorage.removeItem('inbraakveilig_v2_autosave'); location.reload(); } }
-        function saveToFile() {
+        function autoSave() { localStorage.setItem('inbraakveilig_v3_autosave', JSON.stringify(getFormData())); }
+        
+        function clearForm() { if(confirm("Offerte volledig wissen?")) { localStorage.removeItem('inbraakveilig_v3_autosave'); location.reload(); } }
+
+        // SLIMME EXPORT KNOP HIER
+        function exportHTML() {
             const data = getFormData();
+            // Data verstoppen in de script tag bovenaan de pagina
+            document.getElementById('saved-data').textContent = JSON.stringify(data);
+            
+            // Volledige HTML opvragen en downloaden
+            const htmlContent = "<!DOCTYPE html>\n<html lang=\"nl\">\n" + document.documentElement.outerHTML + "\n</html>";
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type: 'application/json'}));
-            a.download = `Opmeting_${data.header.klant}.json`; a.click();
+            a.href = URL.createObjectURL(new Blob([htmlContent], {type: 'text/html'}));
+            a.download = `Offerte_${data.header.klant !== '...' ? data.header.klant : 'Nieuw'}.html`; 
+            a.click();
         }
+
+        // SLIMME IMPORT KNOP HIER
         function loadFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => { renderData(JSON.parse(e.target.result)); autoSave(); };
-            reader.readAsText(event.target.files[0]);
+            reader.onload = e => { 
+                const content = e.target.result;
+                let parsedData = null;
+                
+                // Ondersteunt zowel oude JSON als nieuwe HTML
+                if (file.name.endsWith('.html')) {
+                    const match = content.match(/<script id="saved-data" type="application\/json">([\s\S]*?)<\/script>/);
+                    if (match && match[1] && match[1].trim() !== '{}') {
+                        parsedData = JSON.parse(match[1]);
+                    } else { alert("Geen data gevonden in dit HTML bestand."); }
+                } else {
+                    parsedData = JSON.parse(content);
+                }
+
+                if(parsedData) {
+                    renderData(parsedData); 
+                    autoSave(); 
+                }
+            };
+            reader.readAsText(file);
         }
+
         function renderData(data) {
             document.getElementById('klantNaam').value = data.header.klant;
             document.getElementById('projectNaam').value = data.header.project;
             document.getElementById('verkoperNaam').value = data.header.verkoper;
             document.getElementById('projectAdres').value = data.header.adres;
             document.getElementById('displayDate').value = data.header.datum;
+            if (data.header.btw) document.getElementById('btwSelect').value = data.header.btw;
+            
             document.getElementById('doors-container').innerHTML = '';
             if(data.doors) data.doors.forEach(d => addDoor(d));
+            
+            updateGrandTotal();
         }
 
         function generateProfessionalPDF() {
             const element = document.createElement('div');
             const data = getFormData();
+            
             let content = `<div style="font-family:sans-serif; padding:20px;">
-                <div style="border:4px solid #dc2626; padding:20px; margin-bottom:30px;">
-                    <h1 style="color:#dc2626; margin:0; text-transform:uppercase;">Opmetingsverslag</h1>
-                    <p><strong>Klant:</strong> ${data.header.klant} | <strong>Project:</strong> ${data.header.project}</p>
-                    <p><strong>Adres:</strong> ${data.header.adres} | <strong>Datum:</strong> ${data.header.datum}</p>
+                <div style="border:4px solid #dc2626; padding:20px; margin-bottom:30px; display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <h1 style="color:#dc2626; margin:0; text-transform:uppercase; font-size:28px;">INBRAAKVEILIG</h1>
+                        <p style="margin:5px 0; font-size:16px;"><strong>Offerte & Opmetingsverslag</strong></p>
+                    </div>
+                    <div style="text-align:right; font-size:12px; line-height:1.5;">
+                        <p style="margin:0;">BTW: BE 0660.598.308</p>
+                        <p style="margin:0;">Tel: 052 22 21 35</p>
+                    </div>
+                </div>
+
+                <div style="background:#fef2f2; padding:15px; border-radius:8px; margin-bottom:30px; font-size:13px;">
+                    <p style="margin:0 0 5px 0;"><strong>Klant:</strong> ${data.header.klant} &nbsp;|&nbsp; <strong>Project:</strong> ${data.header.project}</p>
+                    <p style="margin:0;"><strong>Adres:</strong> ${data.header.adres} &nbsp;|&nbsp; <strong>Datum:</strong> ${data.header.datum}</p>
                 </div>`;
+
+            // Deuren blok
             data.doors.forEach((d, i) => {
                 content += `<div style="border:1px solid #ccc; margin-bottom:30px; page-break-inside: avoid; border-radius:10px; overflow:hidden;">
                     <div style="background:#dc2626; color:white; padding:10px; font-weight:bold;">DEUR ${i+1}: ${d.location}</div>
@@ -288,38 +381,50 @@
                 }
                 content += `</div>`;
             });
-            content += `</div>`;
+
+            // Offerte Totaal Blok
+            content += `
+                <div style="margin-top:40px; border:2px solid #15803d; border-radius:8px; padding:20px; page-break-inside:avoid; width:350px; margin-left:auto; background:#f0fdf4;">
+                    <h3 style="color:#15803d; margin-top:0; border-bottom:1px solid #15803d; padding-bottom:10px; text-transform:uppercase;">Offerte Totaal</h3>
+                    <table style="width:100%; font-size:14px; text-align:right;">
+                        <tr><td style="text-align:left; padding-bottom:5px;">Totaal Excl. BTW:</td><td>${document.getElementById('sumExcl').innerText}</td></tr>
+                        <tr><td style="text-align:left; padding-bottom:5px;">BTW (${document.getElementById('sumBtwLabel').innerText}):</td><td>${document.getElementById('sumBtw').innerText}</td></tr>
+                        <tr style="font-weight:bold; font-size:18px; color:#15803d;">
+                            <td style="text-align:left; padding-top:10px; border-top:2px solid #15803d;">Totaal Incl. BTW:</td>
+                            <td style="padding-top:10px; border-top:2px solid #15803d;">${document.getElementById('sumIncl').innerText}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>`;
+
             element.innerHTML = content;
-            html2pdf().from(element).set({ margin: 5, filename: `Opmeting_${data.header.klant}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
+            html2pdf().from(element).set({ margin: 5, filename: `Offerte_${data.header.klant}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
         }
 
         window.onload = () => {
-            const saved = localStorage.getItem('inbraakveilig_v2_autosave');
-            if (saved) renderData(JSON.parse(saved));
-            else { 
-                const d = new Date(); 
-                document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-                addDoor(); 
+            // Slimme laadfunctie: checkt eerst of het bestand data bevat
+            const embeddedData = document.getElementById('saved-data').textContent;
+            
+            if (embeddedData && embeddedData.trim() !== "{}" && embeddedData.trim() !== "") {
+                renderData(JSON.parse(embeddedData));
+            } else {
+                const saved = localStorage.getItem('inbraakveilig_v3_autosave');
+                if (saved) renderData(JSON.parse(saved));
+                else { 
+                    const d = new Date(); 
+                    document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+                    addDoor(); 
+                }
             }
 
-            // --- NIEUWE CODE HIERONDER ---
-            
-            // Haal de stipjes weg als je in een vakje klikt
             document.addEventListener('focusin', e => {
-                if (e.target.tagName === 'INPUT' && e.target.value === '...') {
-                    e.target.value = '';
-                }
+                if (e.target.tagName === 'INPUT' && e.target.value === '...') e.target.value = '';
             });
 
-            // Zet stipjes terug als je het vakje leeg verlaat
             document.addEventListener('focusout', e => {
                 if (e.target.tagName === 'INPUT' && e.target.value.trim() === '') {
                     e.target.value = '...';
-                    
-                    // Zorg dat de titel van de deur terugspringt naar "Klap Open/Toe" als je "Plaats" weer leegmaakt
-                    if (e.target.classList.contains('door-loc')) {
-                        updateDoorTitle(e.target);
-                    }
+                    if (e.target.classList.contains('door-loc')) updateDoorTitle(e.target);
                     autoSave();
                 }
             });
