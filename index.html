@@ -301,6 +301,28 @@
                 document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
                 addDoor(); 
             }
+
+            // --- NIEUWE CODE HIERONDER ---
+            
+            // Haal de stipjes weg als je in een vakje klikt
+            document.addEventListener('focusin', e => {
+                if (e.target.tagName === 'INPUT' && e.target.value === '...') {
+                    e.target.value = '';
+                }
+            });
+
+            // Zet stipjes terug als je het vakje leeg verlaat
+            document.addEventListener('focusout', e => {
+                if (e.target.tagName === 'INPUT' && e.target.value.trim() === '') {
+                    e.target.value = '...';
+                    
+                    // Zorg dat de titel van de deur terugspringt naar "Klap Open/Toe" als je "Plaats" weer leegmaakt
+                    if (e.target.classList.contains('door-loc')) {
+                        updateDoorTitle(e.target);
+                    }
+                    autoSave();
+                }
+            });
         };
     </script>
 </body>
