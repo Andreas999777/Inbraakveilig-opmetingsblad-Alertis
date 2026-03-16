@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbraakveilig-opmetingsblad-Alertis v3.1</title>
+    <title>Inbraakveilig Offertetool v3.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script id="saved-data" type="application/json">{}</script>
@@ -17,11 +17,14 @@
         .photo-preview-img { width: 140px; height: 140px; object-fit: cover; border: 2px solid #dc2626; border-radius: 8px; margin: 5px; }
         .collapsed .door-content { display: none; }
         .sticky-nav { position: sticky; top: 10px; z-index: 50; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); }
+        
+        /* === DRIE PUNTJES VERDWIJNEN OP FOCUS === */
+        .input-field:focus { outline: none; }
+        
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body oninput="autoSave()">
-
     <div class="max-w-5xl mx-auto">
         <div class="no-print mb-8 p-4 rounded-xl shadow-lg border border-red-200 flex flex-wrap gap-3 items-center sticky-nav">
             <div class="mr-auto">
@@ -33,13 +36,12 @@
             <button onclick="generateProfessionalPDF()" class="action-button bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200">📄 Genereer Offerte (PDF)</button>
             <button onclick="clearForm()" class="action-button bg-gray-200 text-gray-600 hover:bg-gray-300">🗑️ Wis</button>
         </div>
-
         <div class="card p-6 border-t-4 border-red-600">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Klant</label><input type="text" id="klantNaam" class="input-field" value="..."></div>
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Project</label><input type="text" id="projectNaam" class="input-field" value="..."></div>
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Verkoper</label><input type="text" id="verkoperNaam" class="input-field" value="..."></div>
-                <div class="md:col-span-1"><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Adres</label><input type="text" id="projectAdres" class="input-field" value="..."></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Klant</label><input type="text" id="klantNaam" class="input-field" placeholder="Naam klant" value=""></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Project</label><input type="text" id="projectNaam" class="input-field" placeholder="Projectnaam" value=""></div>
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Verkoper</label><input type="text" id="verkoperNaam" class="input-field" placeholder="Naam verkoper" value=""></div>
+                <div class="md:col-span-1"><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Adres</label><input type="text" id="projectAdres" class="input-field" placeholder="Volledig adres" value=""></div>
                 <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1">Datum</label><input type="text" id="displayDate" class="input-field"></div>
                 <div>
                     <label class="block text-[10px] font-bold text-red-600 uppercase mb-1">BTW Tarief</label>
@@ -51,9 +53,7 @@
                 </div>
             </div>
         </div>
-
         <div id="doors-container"></div>
-
         <div class="card p-6 border-t-4 border-green-600 bg-green-50 no-print">
             <h3 class="text-green-800 font-bold uppercase text-sm mb-4">Project Totaal</h3>
             <div class="space-y-2">
@@ -62,12 +62,10 @@
                 <div class="flex justify-between text-xl border-t border-green-200 pt-3 mt-2 font-black text-green-700"><span>TOTAAL INCL. BTW:</span><span id="sumIncl">€ 0,00</span></div>
             </div>
         </div>
-
         <button onclick="addDoor(); autoSave();" class="no-print w-full py-6 border-2 border-dashed border-red-300 rounded-xl text-red-600 font-bold hover:bg-white transition-all my-10 uppercase tracking-widest text-sm">
             + Voeg Deur Toe
         </button>
     </div>
-
     <script>
         const artikelen = [
             {n:"39", d:"Houdmagneet 1800N – standaard toebehoren", t:1.5, p:357.81}, {n:"40", d:"Houdmagneet 1800 N – Z-montageconsole", t:2, p:419.58},
@@ -99,7 +97,6 @@
             {n:"91", d:"TS 83 Deurafsluiter (Schaararm)", t:1.5, p:259.77}, {n:"92", d:"TS 92 Glijarm-deurafsluiter", t:1.5, p:298.69},
             {n:"93", d:"TS 93 Glijarm-deurafsluiter", t:1, p:362.24}, {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00}
         ];
-
         function addDoor(data = null) {
             const container = document.getElementById('doors-container');
             const div = document.createElement('div');
@@ -133,9 +130,7 @@
             if(data) fillDoor(div, data);
             updateGrandTotal();
         }
-
         function updateDoorTitle(input) { input.closest('.door-section').querySelector('.door-title-text').innerText = "DEUR: " + (input.value || "..."); }
-
         function calculateDoorTotal(el) {
             const section = el.closest('.door-section');
             let totalP = 0; let totalT = 0;
@@ -144,16 +139,15 @@
                 totalT += parseFloat(c.dataset.t || 0);
             });
             section.querySelector('.door-price').value = `€ ${totalP.toFixed(2).replace('.', ',')}`;
-            
+           
             const hoursInput = section.querySelector('.door-hours');
             if (totalT > 0) {
                 let h = Math.floor(totalT); let m = Math.round((totalT - h) * 60);
                 hoursInput.value = `${h}u ${m > 0 ? m + 'min' : ''}`;
             } else { hoursInput.value = '0u'; }
-            
+           
             updateGrandTotal();
         }
-
         function updateGrandTotal() {
             let total = 0;
             document.querySelectorAll('.art-check:checked').forEach(c => total += parseFloat(c.dataset.p));
@@ -163,7 +157,6 @@
             document.getElementById('sumBtw').innerText = `€ ${btwAmt.toFixed(2).replace('.', ',')}`;
             document.getElementById('sumIncl').innerText = `€ ${(total + btwAmt).toFixed(2).replace('.', ',')}`;
         }
-
         function handlePhotos(e, input) {
             const area = input.closest('.door-section').querySelector('.photo-area');
             Array.from(e.target.files).forEach(f => {
@@ -176,7 +169,6 @@
                 r.readAsDataURL(f);
             });
         }
-
         function getFormData() {
             return {
                 h: { k: document.getElementById('klantNaam').value, p: document.getElementById('projectNaam').value, v: document.getElementById('verkoperNaam').value, a: document.getElementById('projectAdres').value, d: document.getElementById('displayDate').value, b: document.getElementById('btwSelect').value },
@@ -187,7 +179,6 @@
                 }))
             };
         }
-
         function fillDoor(div, d) {
             div.querySelector('.door-loc').value = d.l; updateDoorTitle(div.querySelector('.door-loc'));
             div.querySelector('.door-type').value = d.t; div.querySelector('.door-notes').value = d.n;
@@ -199,15 +190,12 @@
             });
             calculateDoorTotal(div.querySelector('.art-check'));
         }
-
         function autoSave() { localStorage.setItem('ib_save_v3', JSON.stringify(getFormData())); }
-
         function exportHTML() {
             document.getElementById('saved-data').textContent = JSON.stringify(getFormData());
             const blob = new Blob(["<!DOCTYPE html>\n" + document.documentElement.outerHTML], {type: 'text/html'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Inbraakveilig_${document.getElementById('klantNaam').value}.html`; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Inbraakveilig_${document.getElementById('klantNaam').value || 'opmeting'}.html`; a.click();
         }
-
         function loadFromFile(e) {
             const f = e.target.files[0]; if(!f) return;
             const r = new FileReader();
@@ -221,7 +209,6 @@
             };
             r.readAsText(f);
         }
-
         function render(d) {
             document.getElementById('klantNaam').value = d.h.k; document.getElementById('projectNaam').value = d.h.p;
             document.getElementById('verkoperNaam').value = d.h.v; document.getElementById('projectAdres').value = d.h.a;
@@ -230,29 +217,28 @@
             d.doors.forEach(door => addDoor(door));
             updateGrandTotal();
         }
-
         function generateProfessionalPDF() {
             const data = getFormData();
             const el = document.createElement('div');
             el.style.width = "210mm";
-            
-            let c = `<div style="font-family: 'Inter', sans-serif; color: #1e293b;">`;
-            
+           
+            let c = `<div style="font-family: 'Inter', sans-serif; color: #1e293b; line-height:1.4;">`;
+           
             data.doors.forEach((d, i) => {
-                const pageBreak = i > 0 ? 'page-break-before: always; padding-top: 20mm;' : '';
-                c += `<div style="${pageBreak} padding: 15mm; min-height: 260mm;">
+                const pageBreak = i > 0 ? 'page-break-before: always; padding-top: 30mm;' : '';
+                c += `<div style="${pageBreak} padding: 15mm 20mm; min-height: 270mm; page-break-inside: avoid;">
                     ${i === 0 ? `
-                        <div style="border: 4px solid #dc2626; padding: 15px; display: flex; justify-content: space-between; margin-bottom: 20px;">
-                            <div><h1 style="color:#dc2626; margin:0; font-size:24px; font-weight:800;">INBRAAKVEILIG</h1><p style="margin:0; font-weight:600;">Offerte & Opmetingsverslag</p></div>
+                        <div style="border: 4px solid #dc2626; padding: 15px; display: flex; justify-content: space-between; margin-bottom: 25px;">
+                            <div><h1 style="color:#dc2626; margin:0; font-size:28px; font-weight:800;">INBRAAKVEILIG</h1><p style="margin:0; font-weight:600;">Offerte & Opmetingsverslag</p></div>
                             <div style="text-align:right; font-size:10px;">BTW BE 0660.598.308<br>Tel: 052 22 21 35</div>
                         </div>
-                        <div style="background:#fef2f2; padding:15px; border-radius:8px; font-size:12px; margin-bottom:20px; border: 1px solid #fecaca;">
-                            <strong>Klant:</strong> ${data.h.k} | <strong>Project:</strong> ${data.h.p}<br>
-                            <strong>Adres:</strong> ${data.h.a} | <strong>Datum:</strong> ${data.h.d}<br>
-                            <strong>Verkoper:</strong> ${data.h.v}
+                        <div style="background:#fef2f2; padding:15px; border-radius:8px; font-size:12px; margin-bottom:25px; border: 1px solid #fecaca;">
+                            <strong>Klant:</strong> ${data.h.k || '—'} | <strong>Project:</strong> ${data.h.p || '—'}<br>
+                            <strong>Adres:</strong> ${data.h.a || '—'} | <strong>Datum:</strong> ${data.h.d || '—'}<br>
+                            <strong>Verkoper:</strong> ${data.h.v || '—'}
                         </div>` : ''}
-                    
-                    <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden;">
+                   
+                    <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow:hidden; page-break-inside: avoid;">
                         <div style="background:#dc2626; color:white; padding:10px; font-weight:bold; text-transform:uppercase; font-size:14px;">DEUR ${i+1}: ${d.l} (${d.t})</div>
                         <div style="padding:15px;">
                             <table style="width:100%; border-collapse:collapse; font-size:11px;">
@@ -267,18 +253,18 @@
                                     <span style="font-weight:800; color:#dc2626;">Subtotaal Deur: ${d.p}</span>
                                     <span style="font-size:10px; color:#3b82f6; font-weight:bold;">INTERNE CALCULATIE: ${d.w}</span>
                                 </div>
-                                <p style="margin:5px 0 0 0; font-size:10px; color:#64748b;"><b>Opmerkingen:</b> ${d.n !== '...' ? d.n : 'Geen.'}</p>
+                                <p style="margin:5px 0 0 0; font-size:10px; color:#64748b;"><b>Opmerkingen:</b> ${d.n || 'Geen.'}</p>
                             </div>
                         </div>
-                        <div style="padding: 0 15px 15px 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            ${d.imgs.map(src => `<img src="${src}" style="width:100%; height:180px; object-fit:cover; border-radius:5px; border:1px solid #e2e8f0;">`).join('')}
+                        <!-- FOTO'S – VOLLEDIG GEUPDATED (geen afsnijden meer) -->
+                        <div style="padding: 15px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+                            ${d.imgs.map(src => `<img src="${src}" style="max-width: 48%; max-height: 240px; width: auto; height: auto; object-fit: contain; border-radius:5px; border:1px solid #e2e8f0; page-break-inside: avoid;">`).join('')}
                         </div>
                     </div>
                 </div>`;
             });
-
-            c += `<div style="page-break-before: always; padding: 20mm;">
-                    <div style="border: 2px solid #15803d; background: #f0fdf4; padding: 30px; border-radius: 12px; max-width: 400px; margin-left: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            c += `<div style="page-break-before: always; padding: 30mm 20mm;">
+                    <div style="border: 2px solid #15803d; background: #f0fdf4; padding: 30px; border-radius: 12px; max-width: 420px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                         <h2 style="color:#15803d; margin-top:0; border-bottom: 2px solid #15803d; padding-bottom:10px; font-weight:800;">TOTAALOVERZICHT</h2>
                         <table style="width:100%; font-size:14px; border-spacing: 0 8px; border-collapse: separate;">
                             <tr><td style="font-weight:500;">Excl. BTW:</td><td style="text-align:right; font-weight:700;">${document.getElementById('sumExcl').innerText}</td></tr>
@@ -289,23 +275,31 @@
                             </tr>
                         </table>
                     </div>
-                    <div style="margin-top: 50px; text-align:center; color:#94a3b8; font-size:10px;">Inbraakveilig | BE 0660.598.308 | 052 22 21 35</div>
+                    <div style="margin-top: 60px; text-align:center; color:#94a3b8; font-size:10px;">Inbraakveilig | BE 0660.598.308 | 052 22 21 35</div>
                 </div></div>`;
-            
+           
             el.innerHTML = c;
-            html2pdf().from(el).set({ margin:0, filename: `Offerte_${data.h.k}.pdf`, html2canvas:{scale:2, useCORS: true}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} }).save();
+            html2pdf().from(el).set({ 
+                margin: [10, 8, 10, 8], 
+                filename: `Offerte_${data.h.k || 'Alertis'}.pdf`, 
+                html2canvas:{scale:2, useCORS: true, letterRendering: true}, 
+                jsPDF:{unit:'mm', format:'a4', orientation:'portrait'} 
+            }).save();
         }
-
         window.onload = () => {
             const eb = document.getElementById('saved-data').textContent;
             if(eb && eb !== "{}" && eb !== "") render(JSON.parse(eb));
             else {
                 const s = localStorage.getItem('ib_save_v3');
                 if(s) render(JSON.parse(s));
-                else { const d = new Date(); document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; addDoor(); }
+                else { 
+                    const d = new Date(); 
+                    document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; 
+                    addDoor(); 
+                }
             }
         };
-        
+       
         function clearForm() { if(confirm("Volledig wissen?")) { localStorage.removeItem('ib_save_v3'); location.reload(); } }
     </script>
 </body>
