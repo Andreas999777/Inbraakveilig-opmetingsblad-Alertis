@@ -111,10 +111,23 @@
             document.querySelectorAll('.door-badge-num').forEach((badge, index) => { badge.innerText = index + 1; });
         }
 
-        function updateDoorTitle(input) {
-            const label = input.closest('.door-section').querySelector('.door-title-text');
-            const val = input.value.trim();
-            label.innerText = (val && val !== '...') ? `DEUR: ${val}` : "Klap Open/Toe";
+        // --- NIEUW: Update de koptekst met Plaats, Type én Artikelen ---
+        function updateDoorSummary(el) {
+            const section = el.closest('.door-section');
+            const label = section.querySelector('.door-title-text');
+            const loc = section.querySelector('.door-loc').value.trim();
+            const type = section.querySelector('.door-type').value.trim();
+            
+            // Haal nummers van aangevinkte artikelen op
+            const checkedBoxes = Array.from(section.querySelectorAll('.art-check:checked'));
+            const arts = checkedBoxes.map(cb => cb.dataset.n).join(', ');
+
+            let titleStr = "Klap Open/Toe";
+            if (loc && loc !== '...') titleStr += ` | Plaats: ${loc}`;
+            if (type && type !== '...') titleStr += ` | Type: ${type}`;
+            if (arts) titleStr += ` | Artikelen: ${arts}`;
+            
+            label.innerText = titleStr;
         }
 
         function calculateTotals(el) {
@@ -132,6 +145,9 @@
             } else { hoursInput.value = '...'; }
             const priceInput = section.querySelector('.door-price');
             priceInput.value = totalPrice > 0 ? `€ ${totalPrice.toFixed(2).replace('.', ',')}` : '...';
+            
+            // Zorg dat de koptekst ook meteen update als er een artikel wordt aangevinkt
+            updateDoorSummary(el);
         }
 
         function addDoor(data = null) {
@@ -148,9 +164,10 @@
                     <button onclick="event.stopPropagation(); this.closest('.door-section').remove(); reindexDoors(); autoSave();" class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-800 shadow-sm">Verwijder</button>
                 </div>
                 <div class="door-content p-6">
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Plaats</label><input type="text" class="input-field door-loc" value="..." oninput="updateDoorTitle(this); autoSave()"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Type Deur</label><input type="text" class="input-field door-type" value="..." oninput="autoSave()"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Plaats</label><input type="text" class="input-field door-loc" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Type Deur</label><input type="text" class="input-field door-type" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Verdiep</label><input type="text" class="input-field door-floor" value="..." oninput="autoSave()"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mb-4 border-y border-red-50 py-4 max-h-96 overflow-y-auto">
                         ${artikelen.map(a => `
@@ -202,12 +219,18 @@
         function fillDoorData(div, d) {
             div.querySelector('.door-loc').value = d.location || '...';
             div.querySelector('.door-type').value = d.type || '...';
+            div.querySelector('.door-floor').value = d.floor || '...'; // NIEUW: Verdiep
             div.querySelector('.door-notes').value = d.notes || '...';
+            
             if(d.items) d.items.forEach(n => {
                 const cb = div.querySelector(`.art-check[data-n="${n}"]`);
                 if(cb) cb.checked = true;
             });
             calculateTotals(div.querySelector('.art-check'));
+            
+            // Start de koptekst op na laden
+            updateDoorSummary(div.querySelector('.door-loc'));
+
             if(d.photos) {
                 const area = div.querySelector('.photo-area');
                 d.photos.forEach(src => {
@@ -225,6 +248,7 @@
                 doors: Array.from(document.querySelectorAll('.door-section')).map(s => ({
                     location: s.querySelector('.door-loc').value,
                     type: s.querySelector('.door-type').value,
+                    floor: s.querySelector('.door-floor').value, // NIEUW: Verdiep
                     hours: s.querySelector('.door-hours').value,
                     totalPrice: s.querySelector('.door-price').value,
                     notes: s.querySelector('.door-notes').value,
@@ -260,15 +284,31 @@
         function generateProfessionalPDF() {
             const element = document.createElement('div');
             const data = getFormData();
+            
+            // Totalen berekenen
+            let grandTotalPrice = 0;
+            let grandTotalHours = 0;
+
             let content = `<div style="font-family:sans-serif; padding:20px;">
                 <div style="border:4px solid #dc2626; padding:20px; margin-bottom:30px;">
                     <h1 style="color:#dc2626; margin:0; text-transform:uppercase;">Opmetingsverslag</h1>
                     <p><strong>Klant:</strong> ${data.header.klant} | <strong>Project:</strong> ${data.header.project}</p>
                     <p><strong>Adres:</strong> ${data.header.adres} | <strong>Datum:</strong> ${data.header.datum}</p>
                 </div>`;
+            
             data.doors.forEach((d, i) => {
+                // Bereken deur totalen voor het eindtotaal
+                d.items.forEach(n => {
+                    const art = artikelen.find(a => a.n === n);
+                    if(art) {
+                        grandTotalPrice += art.p;
+                        grandTotalHours += art.t;
+                    }
+                });
+
+                // Verdiep toegevoegd aan de koptekst van de PDF per deur
                 content += `<div style="border:1px solid #ccc; margin-bottom:30px; page-break-inside: avoid; border-radius:10px; overflow:hidden;">
-                    <div style="background:#dc2626; color:white; padding:10px; font-weight:bold;">DEUR ${i+1}: ${d.location}</div>
+                    <div style="background:#dc2626; color:white; padding:10px; font-weight:bold;">DEUR ${i+1}: ${d.location} (Verdiep: ${d.floor})</div>
                     <div style="padding:15px;">
                         <table style="width:100%; border-collapse:collapse; font-size:12px;">
                             ${d.items.map(n => {
@@ -288,7 +328,21 @@
                 }
                 content += `</div>`;
             });
-            content += `</div>`;
+
+            // --- NIEUW: Eindtotaal Berekening en Blokkering op de PDF ---
+            let uren = Math.floor(grandTotalHours); 
+            let minuten = Math.round((grandTotalHours - uren) * 60);
+            let urenWeergave = `${uren} uur ${minuten > 0 ? minuten + ' min' : ''}`.trim();
+
+            content += `
+                <div style="margin-top:30px; border:2px solid #dc2626; padding:20px; border-radius:10px; background:#fef2f2; width:300px; float:right;">
+                    <h3 style="color:#dc2626; margin-top:0; border-bottom:1px solid #fca5a5; padding-bottom:10px; text-transform:uppercase;">Eindtotaal Project</h3>
+                    <p style="margin:5px 0; font-size:14px;"><strong>Totale Werkuren:</strong> ${urenWeergave}</p>
+                    <p style="margin:5px 0; font-size:16px;"><strong>Totale Prijs:</strong> € ${grandTotalPrice.toFixed(2).replace('.', ',')}</p>
+                </div>
+                <div style="clear:both;"></div>
+            </div>`;
+
             element.innerHTML = content;
             html2pdf().from(element).set({ margin: 5, filename: `Opmeting_${data.header.klant}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
         }
@@ -302,8 +356,6 @@
                 addDoor(); 
             }
 
-            // --- NIEUWE CODE HIERONDER ---
-            
             // Haal de stipjes weg als je in een vakje klikt
             document.addEventListener('focusin', e => {
                 if (e.target.tagName === 'INPUT' && e.target.value === '...') {
@@ -316,9 +368,8 @@
                 if (e.target.tagName === 'INPUT' && e.target.value.trim() === '') {
                     e.target.value = '...';
                     
-                    // Zorg dat de titel van de deur terugspringt naar "Klap Open/Toe" als je "Plaats" weer leegmaakt
-                    if (e.target.classList.contains('door-loc')) {
-                        updateDoorTitle(e.target);
+                    if (e.target.classList.contains('door-loc') || e.target.classList.contains('door-type')) {
+                        updateDoorSummary(e.target);
                     }
                     autoSave();
                 }
