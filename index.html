@@ -14,7 +14,12 @@
         .action-button { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 13px; text-decoration: none; }
         .input-field { width: 100%; padding: 10px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 14px; }
         .photo-preview-img { width: 120px; height: 120px; object-fit: cover; border: 1px solid #dc2626; border-radius: 4px; margin: 5px; }
+        
+        /* Aangepaste CSS voor de voorvertoning (preview) */
+        .door-preview { display: none; }
+        .collapsed .door-preview { display: block; }
         .collapsed .door-content { display: none; }
+        
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
@@ -108,26 +113,50 @@
         ];
 
         function reindexDoors() {
-            document.querySelectorAll('.door-badge-num').forEach((badge, index) => { badge.innerText = index + 1; });
+            document.querySelectorAll('.door-section').forEach((section, index) => {
+                section.querySelector('.door-badge-num').innerText = index + 1;
+                updateDoorSummary(section);
+            });
         }
 
-        // --- NIEUW: Update de koptekst met Plaats, Type én Artikelen ---
+        // --- AANGEPAST: De "PDF Look" Voorvertoning Genereren ---
         function updateDoorSummary(el) {
             const section = el.closest('.door-section');
-            const label = section.querySelector('.door-title-text');
-            const loc = section.querySelector('.door-loc').value.trim();
-            const type = section.querySelector('.door-type').value.trim();
-            
-            // Haal nummers van aangevinkte artikelen op
-            const checkedBoxes = Array.from(section.querySelectorAll('.art-check:checked'));
-            const arts = checkedBoxes.map(cb => cb.dataset.n).join(', ');
+            if (!section) return;
 
-            let titleStr = "Klap Open/Toe";
-            if (loc && loc !== '...') titleStr += ` | Plaats: ${loc}`;
-            if (type && type !== '...') titleStr += ` | Type: ${type}`;
-            if (arts) titleStr += ` | Artikelen: ${arts}`;
-            
-            label.innerText = titleStr;
+            const previewContainer = section.querySelector('.door-preview-content');
+            if (!previewContainer) return;
+
+            const index = section.querySelector('.door-badge-num').innerText;
+            const loc = section.querySelector('.door-loc').value.trim();
+            const price = section.querySelector('.door-price').value;
+            const notes = section.querySelector('.door-notes').value.trim();
+
+            // Haal artikelen op voor de preview
+            const checkedBoxes = Array.from(section.querySelectorAll('.art-check:checked'));
+            let artsHtml = checkedBoxes.map(cb => {
+                const n = cb.dataset.n;
+                const art = artikelen.find(a => a.n === n);
+                return `<div style="padding: 2px 0;"><strong>${art.n}</strong> - ${art.d}</div>`;
+            }).join('');
+
+            // Haal foto's op voor de preview
+            const photos = Array.from(section.querySelectorAll('.photo-preview-img')).map(img => img.src);
+            let photosHtml = '';
+            if (photos.length > 0) {
+                photosHtml = `<div class="flex flex-wrap gap-2 mt-3">` + 
+                    photos.map(src => `<img src="${src}" class="w-16 h-16 object-cover border border-red-200 rounded shadow-sm">`).join('') + 
+                `</div>`;
+            }
+
+            // Bouw het HTML blok voor in de voorvertoning
+            previewContainer.innerHTML = `
+                <div class="font-bold text-red-700 text-sm mb-2 uppercase border-b border-red-100 pb-1">DEUR ${index}: ${loc !== '...' ? loc : 'Nieuwe Deur'}</div>
+                <div class="text-[11px] text-slate-700 mb-3">${artsHtml || '<em class="text-slate-400">Nog geen artikelen geselecteerd...</em>'}</div>
+                <div class="text-xs font-bold text-green-700 mb-1">Totaal Deur: ${price}</div>
+                ${notes && notes !== '...' ? `<div class="text-[11px] text-slate-600 mt-2 bg-slate-50 p-2 rounded border border-slate-100"><strong>Nota:</strong> ${notes}</div>` : ''}
+                ${photosHtml}
+            `;
         }
 
         function calculateTotals(el) {
@@ -146,7 +175,6 @@
             const priceInput = section.querySelector('.door-price');
             priceInput.value = totalPrice > 0 ? `€ ${totalPrice.toFixed(2).replace('.', ',')}` : '...';
             
-            // Zorg dat de koptekst ook meteen update als er een artikel wordt aangevinkt
             updateDoorSummary(el);
         }
 
@@ -159,14 +187,19 @@
                 <div class="no-print bg-red-50 p-3 flex justify-between items-center cursor-pointer border-b border-red-100" onclick="this.parentElement.classList.toggle('collapsed')">
                     <div class="flex items-center gap-3">
                         <span class="door-badge-num bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shadow-sm">0</span>
-                        <span class="door-title-text text-red-700 font-bold uppercase text-xs tracking-wider italic">Klap Open/Toe</span>
+                        <span class="text-red-700 font-bold uppercase text-xs tracking-wider italic">Klap Open/Toe</span>
                     </div>
                     <button onclick="event.stopPropagation(); this.closest('.door-section').remove(); reindexDoors(); autoSave();" class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-800 shadow-sm">Verwijder</button>
                 </div>
+                
+                <div class="door-preview no-print p-5 bg-white border-b border-red-50">
+                    <div class="door-preview-content"></div>
+                </div>
+
                 <div class="door-content p-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Plaats</label><input type="text" class="input-field door-loc" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
-                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Type Deur</label><input type="text" class="input-field door-type" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
+                        <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Type Deur</label><input type="text" class="input-field door-type" value="..." oninput="autoSave()"></div>
                         <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Verdiep</label><input type="text" class="input-field door-floor" value="..." oninput="autoSave()"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 mb-4 border-y border-red-50 py-4 max-h-96 overflow-y-auto">
@@ -181,7 +214,7 @@
                         <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Werkuren (Interne Calculatie)</label><input type="text" class="input-field door-hours" value="..." readonly></div>
                         <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Totaal Deur (Excl. BTW)</label><input type="text" class="input-field door-price text-green-700 font-bold" value="..." readonly></div>
                     </div>
-                    <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Opmerkingen</label><input type="text" class="input-field door-notes" value="..." oninput="autoSave()"></div>
+                    <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Opmerkingen</label><input type="text" class="input-field door-notes" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
                     
                     <div class="no-print mt-6 bg-red-50 p-4 rounded-lg border border-dashed border-red-200">
                         <label class="block text-[10px] font-bold text-red-700 uppercase mb-2">Foto's & Camera:</label>
@@ -208,8 +241,10 @@
                 reader.onload = res => {
                     const imgDiv = document.createElement('div');
                     imgDiv.className = "relative inline-block";
-                    imgDiv.innerHTML = `<img src="${res.target.result}" class="photo-preview-img shadow-md"><button onclick="this.parentElement.remove(); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
+                    // Toegevoegd: Verwijderen update ook direct de preview
+                    imgDiv.innerHTML = `<img src="${res.target.result}" class="photo-preview-img shadow-md"><button onclick="const s = this.closest('.door-section'); this.parentElement.remove(); updateDoorSummary(s); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
                     area.appendChild(imgDiv);
+                    updateDoorSummary(area);
                     autoSave();
                 };
                 reader.readAsDataURL(file);
@@ -219,7 +254,7 @@
         function fillDoorData(div, d) {
             div.querySelector('.door-loc').value = d.location || '...';
             div.querySelector('.door-type').value = d.type || '...';
-            div.querySelector('.door-floor').value = d.floor || '...'; // NIEUW: Verdiep
+            div.querySelector('.door-floor').value = d.floor || '...';
             div.querySelector('.door-notes').value = d.notes || '...';
             
             if(d.items) d.items.forEach(n => {
@@ -227,19 +262,17 @@
                 if(cb) cb.checked = true;
             });
             calculateTotals(div.querySelector('.art-check'));
-            
-            // Start de koptekst op na laden
-            updateDoorSummary(div.querySelector('.door-loc'));
 
             if(d.photos) {
                 const area = div.querySelector('.photo-area');
                 d.photos.forEach(src => {
                     const imgDiv = document.createElement('div');
                     imgDiv.className = "relative inline-block";
-                    imgDiv.innerHTML = `<img src="${src}" class="photo-preview-img shadow-md"><button onclick="this.parentElement.remove(); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
+                    imgDiv.innerHTML = `<img src="${src}" class="photo-preview-img shadow-md"><button onclick="const s = this.closest('.door-section'); this.parentElement.remove(); updateDoorSummary(s); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
                     area.appendChild(imgDiv);
                 });
             }
+            updateDoorSummary(div.querySelector('.door-loc'));
         }
 
         function getFormData() {
@@ -248,7 +281,7 @@
                 doors: Array.from(document.querySelectorAll('.door-section')).map(s => ({
                     location: s.querySelector('.door-loc').value,
                     type: s.querySelector('.door-type').value,
-                    floor: s.querySelector('.door-floor').value, // NIEUW: Verdiep
+                    floor: s.querySelector('.door-floor').value,
                     hours: s.querySelector('.door-hours').value,
                     totalPrice: s.querySelector('.door-price').value,
                     notes: s.querySelector('.door-notes').value,
@@ -260,12 +293,21 @@
 
         function autoSave() { localStorage.setItem('inbraakveilig_v2_autosave', JSON.stringify(getFormData())); }
         function clearForm() { if(confirm("Formulier wissen?")) { localStorage.removeItem('inbraakveilig_v2_autosave'); location.reload(); } }
+        
+        // --- AANGEPAST: Slimme Bestandsnaam bij Opslaan JSON ---
         function saveToFile() {
             const data = getFormData();
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type: 'application/json'}));
-            a.download = `Opmeting_${data.header.klant}.json`; a.click();
+            
+            // Genereer veilige filenaam o.b.v. Klant + Project
+            let kName = data.header.klant !== '...' && data.header.klant.trim() !== '' ? data.header.klant.trim() : 'Klant';
+            let pName = data.header.project !== '...' && data.header.project.trim() !== '' ? data.header.project.trim() : 'Project';
+            a.download = `Opmeting_${kName}_${pName}.json`; 
+            
+            a.click();
         }
+
         function loadFromFile(event) {
             const reader = new FileReader();
             reader.onload = e => { renderData(JSON.parse(e.target.result)); autoSave(); };
@@ -281,11 +323,11 @@
             if(data.doors) data.doors.forEach(d => addDoor(d));
         }
 
+        // --- AANGEPAST: Slimme Bestandsnaam bij Genereren PDF ---
         function generateProfessionalPDF() {
             const element = document.createElement('div');
             const data = getFormData();
             
-            // Totalen berekenen
             let grandTotalPrice = 0;
             let grandTotalHours = 0;
 
@@ -297,7 +339,6 @@
                 </div>`;
             
             data.doors.forEach((d, i) => {
-                // Bereken deur totalen voor het eindtotaal
                 d.items.forEach(n => {
                     const art = artikelen.find(a => a.n === n);
                     if(art) {
@@ -306,7 +347,6 @@
                     }
                 });
 
-                // Verdiep toegevoegd aan de koptekst van de PDF per deur
                 content += `<div style="border:1px solid #ccc; margin-bottom:30px; page-break-inside: avoid; border-radius:10px; overflow:hidden;">
                     <div style="background:#dc2626; color:white; padding:10px; font-weight:bold;">DEUR ${i+1}: ${d.location} (Verdiep: ${d.floor})</div>
                     <div style="padding:15px;">
@@ -329,7 +369,6 @@
                 content += `</div>`;
             });
 
-            // --- NIEUW: Eindtotaal Berekening en Blokkering op de PDF ---
             let uren = Math.floor(grandTotalHours); 
             let minuten = Math.round((grandTotalHours - uren) * 60);
             let urenWeergave = `${uren} uur ${minuten > 0 ? minuten + ' min' : ''}`.trim();
@@ -344,7 +383,13 @@
             </div>`;
 
             element.innerHTML = content;
-            html2pdf().from(element).set({ margin: 5, filename: `Opmeting_${data.header.klant}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
+            
+            // Genereer veilige filenaam o.b.v. Klant + Project
+            let kName = data.header.klant !== '...' && data.header.klant.trim() !== '' ? data.header.klant.trim() : 'Klant';
+            let pName = data.header.project !== '...' && data.header.project.trim() !== '' ? data.header.project.trim() : 'Project';
+            let finalFileName = `Opmeting_${kName}_${pName}.pdf`;
+
+            html2pdf().from(element).set({ margin: 5, filename: finalFileName, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
         }
 
         window.onload = () => {
@@ -356,18 +401,15 @@
                 addDoor(); 
             }
 
-            // Haal de stipjes weg als je in een vakje klikt
             document.addEventListener('focusin', e => {
                 if (e.target.tagName === 'INPUT' && e.target.value === '...') {
                     e.target.value = '';
                 }
             });
 
-            // Zet stipjes terug als je het vakje leeg verlaat
             document.addEventListener('focusout', e => {
                 if (e.target.tagName === 'INPUT' && e.target.value.trim() === '') {
                     e.target.value = '...';
-                    
                     if (e.target.classList.contains('door-loc') || e.target.classList.contains('door-type')) {
                         updateDoorSummary(e.target);
                     }
