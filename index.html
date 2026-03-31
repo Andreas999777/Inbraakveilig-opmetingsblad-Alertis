@@ -15,7 +15,6 @@
         .input-field { width: 100%; padding: 10px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 14px; }
         .photo-preview-img { width: 120px; height: 120px; object-fit: cover; border: 1px solid #dc2626; border-radius: 4px; margin: 5px; }
         
-        /* Aangepaste CSS voor de voorvertoning (preview) */
         .door-preview { display: none; }
         .collapsed .door-preview { display: block; }
         .collapsed .door-content { display: none; }
@@ -54,8 +53,7 @@
 
     <script>
         const artikelen = [
-            
-            {n:"s94", d:"Verwijdering bestaande installatie", t:1, p:79.00}
+            {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00}, // NU BOVENAAN
             {n:"39", d:"Houdmagneet 1800N – standaard toebehoren", t:1.5, p:357.81},
             {n:"40", d:"Houdmagneet 1800 N – Z-montageconsole", t:2, p:419.58},
             {n:"41", d:"Houdmagneet 1800 N – U-montage (Glas)", t:3, p:532.53},
@@ -110,7 +108,7 @@
             {n:"90", d:"TS 73 Deurafsluiter (Schaararm)", t:1.5, p:237.19},
             {n:"91", d:"TS 83 Deurafsluiter (Schaararm)", t:1.5, p:259.77},
             {n:"92", d:"TS 92 Glijarm-deurafsluiter", t:1.5, p:298.69},
-            {n:"93", d:"TS 93 Glijarm-deurafsluiter", t:1, p:362.24},
+            {n:"93", d:"TS 93 Glijarm-deurafsluiter", t:1, p:362.24}
         ];
 
         function reindexDoors() {
@@ -123,23 +121,19 @@
         function updateDoorSummary(el) {
             const section = el.closest('.door-section');
             if (!section) return;
-
             const previewContainer = section.querySelector('.door-preview-content');
             if (!previewContainer) return;
-
             const index = section.querySelector('.door-badge-num').innerText;
             const loc = section.querySelector('.door-loc').value.trim();
             const price = section.querySelector('.door-price').value;
             const hours = section.querySelector('.door-hours').value;
             const notes = section.querySelector('.door-notes').value.trim();
-
             const checkedBoxes = Array.from(section.querySelectorAll('.art-check:checked'));
             let artsHtml = checkedBoxes.map(cb => {
                 const n = cb.dataset.n;
                 const art = artikelen.find(a => a.n === n);
                 return `<div style="padding: 2px 0;"><strong>${art.n}</strong> - ${art.d}</div>`;
             }).join('');
-
             const photos = Array.from(section.querySelectorAll('.photo-preview-img')).map(img => img.src);
             let photosHtml = '';
             if (photos.length > 0) {
@@ -147,7 +141,6 @@
                     photos.map(src => `<img src="${src}" class="w-16 h-16 object-cover border border-red-200 rounded shadow-sm">`).join('') + 
                 `</div>`;
             }
-
             previewContainer.innerHTML = `
                 <div class="font-bold text-red-700 text-sm mb-2 uppercase border-b border-red-100 pb-1">DEUR ${index}: ${loc !== '...' ? loc : 'Nieuwe Deur'}</div>
                 <div class="text-[11px] text-slate-700 mb-3">${artsHtml || '<em class="text-slate-400">Nog geen artikelen geselecteerd...</em>'}</div>
@@ -175,7 +168,6 @@
             } else { hoursInput.value = '...'; }
             const priceInput = section.querySelector('.door-price');
             priceInput.value = totalPrice > 0 ? `€ ${totalPrice.toFixed(2).replace('.', ',')}` : '...';
-            
             updateDoorSummary(el);
         }
 
@@ -192,11 +184,9 @@
                     </div>
                     <button onclick="event.stopPropagation(); this.closest('.door-section').remove(); reindexDoors(); autoSave();" class="bg-red-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase hover:bg-red-800 shadow-sm">Verwijder</button>
                 </div>
-                
                 <div class="door-preview no-print p-5 bg-white border-b border-red-50">
                     <div class="door-preview-content"></div>
                 </div>
-
                 <div class="door-content p-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Plaats</label><input type="text" class="input-field door-loc" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
@@ -216,13 +206,11 @@
                         <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Totaal Deur (Excl. BTW)</label><input type="text" class="input-field door-price text-green-700 font-bold" value="..." readonly></div>
                     </div>
                     <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 tracking-wider">Opmerkingen</label><input type="text" class="input-field door-notes" value="..." oninput="updateDoorSummary(this); autoSave()"></div>
-                    
                     <div class="no-print mt-6 bg-red-50 p-4 rounded-lg border border-dashed border-red-200">
                         <label class="block text-[10px] font-bold text-red-700 uppercase mb-2">Foto's & Camera:</label>
                         <div class="flex gap-2">
                             <input type="file" multiple accept="image/*" class="hidden" id="file-${timestamp}" onchange="handleImgs(event, this)">
                             <button onclick="document.getElementById('file-${timestamp}').click()" class="action-button bg-slate-800 text-white text-[11px]">📂 Foto's Toevoegen</button>
-                            
                             <input type="file" accept="image/*" capture="environment" class="hidden" id="cam-${timestamp}" onchange="handleImgs(event, this)">
                             <button onclick="document.getElementById('cam-${timestamp}').click()" class="action-button bg-red-600 text-white text-[11px]">📸 Camera</button>
                         </div>
@@ -256,13 +244,11 @@
             div.querySelector('.door-type').value = d.type || '...';
             div.querySelector('.door-floor').value = d.floor || '...';
             div.querySelector('.door-notes').value = d.notes || '...';
-            
             if(d.items) d.items.forEach(n => {
                 const cb = div.querySelector(`.art-check[data-n="${n}"]`);
                 if(cb) cb.checked = true;
             });
             calculateTotals(div.querySelector('.art-check'));
-
             if(d.photos) {
                 const area = div.querySelector('.photo-area');
                 d.photos.forEach(src => {
@@ -298,11 +284,9 @@
             const data = getFormData();
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type: 'application/json'}));
-            
             let kName = data.header.klant !== '...' && data.header.klant.trim() !== '' ? data.header.klant.trim() : 'Klant';
             let pName = data.header.project !== '...' && data.header.project.trim() !== '' ? data.header.project.trim() : 'Project';
             a.download = `Opmeting_${kName}_${pName}.json`; 
-            
             a.click();
         }
 
@@ -324,27 +308,18 @@
         function generateProfessionalPDF() {
             const element = document.createElement('div');
             const data = getFormData();
-            
-            let grandTotalPrice = 0;
-            let grandTotalHours = 0;
-
+            let grandTotalPrice = 0; let grandTotalHours = 0;
             let content = `<div style="font-family:sans-serif; padding:20px;">
                 <div style="border:4px solid #dc2626; padding:20px; margin-bottom:30px;">
                     <h1 style="color:#dc2626; margin:0; text-transform:uppercase;">Opmetingsverslag</h1>
                     <p><strong>Klant:</strong> ${data.header.klant} | <strong>Project:</strong> ${data.header.project}</p>
                     <p><strong>Adres:</strong> ${data.header.adres} | <strong>Datum:</strong> ${data.header.datum}</p>
                 </div>`;
-            
             data.doors.forEach((d, i) => {
                 d.items.forEach(n => {
                     const art = artikelen.find(a => a.n === n);
-                    if(art) {
-                        grandTotalPrice += art.p;
-                        grandTotalHours += art.t;
-                    }
+                    if(art) { grandTotalPrice += art.p; grandTotalHours += art.t; }
                 });
-
-                // Gedeelte met data: Bevat nu page-break-inside: avoid; zodat dit blok samenblijft
                 content += `<div style="border:1px solid #ccc; margin-bottom:30px; border-radius:10px; overflow:hidden;">
                     <div style="page-break-inside: avoid;">
                         <div style="background:#dc2626; color:white; padding:10px; font-weight:bold;">DEUR ${i+1}: ${d.location} (Verdiep: ${d.floor})</div>
@@ -361,42 +336,28 @@
                             </div>
                         </div>
                     </div>`;
-
-                // AANGEPAST: Grote foto weergave. Flex container met page-break beveiliging per foto.
                 if(d.photos && d.photos.length > 0) {
                     content += `<div style="padding:15px; background:#f0f0f0; display:flex; flex-wrap:wrap; justify-content:space-between;">`;
                     d.photos.forEach(src => {
-                        content += `
-                            <div style="width:48%; margin-bottom:15px; page-break-inside: avoid;">
-                                <img src="${src}" style="width:100%; height:350px; object-fit:cover; border-radius:8px; border:1px solid #ccc;">
-                            </div>`;
+                        content += `<div style="width:48%; margin-bottom:15px; page-break-inside: avoid;"><img src="${src}" style="width:100%; height:350px; object-fit:cover; border-radius:8px; border:1px solid #ccc;"></div>`;
                     });
                     content += `</div>`;
                 }
                 content += `</div>`;
             });
-
-            let uren = Math.floor(grandTotalHours); 
-            let minuten = Math.round((grandTotalHours - uren) * 60);
+            let uren = Math.floor(grandTotalHours); let minuten = Math.round((grandTotalHours - uren) * 60);
             let urenWeergave = `${uren} uur ${minuten > 0 ? minuten + ' min' : ''}`.trim();
-
-            // AANGEPAST: page-break-inside: avoid; over het gehele Eindtotaal blok geplaatst.
-            content += `
-                <div style="page-break-inside: avoid; margin-top:30px; display:flex; justify-content:flex-end;">
+            content += `<div style="page-break-inside: avoid; margin-top:30px; display:flex; justify-content:flex-end;">
                     <div style="border:2px solid #dc2626; padding:20px; border-radius:10px; background:#fef2f2; width:350px;">
                         <h3 style="color:#dc2626; margin-top:0; border-bottom:1px solid #fca5a5; padding-bottom:10px; text-transform:uppercase;">Eindtotaal Project</h3>
                         <p style="margin:5px 0; font-size:14px;"><strong>Totale Werkuren:</strong> ${urenWeergave}</p>
                         <p style="margin:5px 0; font-size:16px;"><strong>Totale Prijs:</strong> € ${grandTotalPrice.toFixed(2).replace('.', ',')}</p>
                     </div>
-                </div>
-            </div>`;
-
+                </div></div>`;
             element.innerHTML = content;
-            
             let kName = data.header.klant !== '...' && data.header.klant.trim() !== '' ? data.header.klant.trim() : 'Klant';
             let pName = data.header.project !== '...' && data.header.project.trim() !== '' ? data.header.project.trim() : 'Project';
             let finalFileName = `Opmeting_${kName}_${pName}.pdf`;
-
             html2pdf().from(element).set({ margin: 5, filename: finalFileName, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
         }
 
@@ -408,19 +369,11 @@
                 document.getElementById('displayDate').value = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
                 addDoor(); 
             }
-
-            document.addEventListener('focusin', e => {
-                if (e.target.tagName === 'INPUT' && e.target.value === '...') {
-                    e.target.value = '';
-                }
-            });
-
+            document.addEventListener('focusin', e => { if (e.target.tagName === 'INPUT' && e.target.value === '...') e.target.value = ''; });
             document.addEventListener('focusout', e => {
                 if (e.target.tagName === 'INPUT' && e.target.value.trim() === '') {
                     e.target.value = '...';
-                    if (e.target.classList.contains('door-loc') || e.target.classList.contains('door-type')) {
-                        updateDoorSummary(e.target);
-                    }
+                    if (e.target.classList.contains('door-loc') || e.target.classList.contains('door-type')) updateDoorSummary(e.target);
                     autoSave();
                 }
             });
