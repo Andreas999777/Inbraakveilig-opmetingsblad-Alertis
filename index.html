@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inbraakveilig Opmetingsformulier V2.2</title>
+    <title>Inbraakveilig Opmetingsformulier V2.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -53,7 +53,7 @@
 
     <script>
         const artikelen = [
-            {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00}, // NU BOVENAAN
+            {n:"94", d:"Verwijdering bestaande installatie", t:1, p:79.00},
             {n:"39", d:"Houdmagneet 1800N – standaard toebehoren", t:1.5, p:357.81},
             {n:"40", d:"Houdmagneet 1800 N – Z-montageconsole", t:2, p:419.58},
             {n:"41", d:"Houdmagneet 1800 N – U-montage (Glas)", t:3, p:532.53},
@@ -223,17 +223,40 @@
             reindexDoors();
         }
 
+        // --- HIER ZIT DE NIEUWE COMPRESSIE LOGICA ---
         function handleImgs(e, input) {
             const area = input.closest('.door-section').querySelector('.photo-area');
             Array.from(e.target.files).forEach(file => {
                 const reader = new FileReader();
-                reader.onload = res => {
-                    const imgDiv = document.createElement('div');
-                    imgDiv.className = "relative inline-block";
-                    imgDiv.innerHTML = `<img src="${res.target.result}" class="photo-preview-img shadow-md"><button onclick="const s = this.closest('.door-section'); this.parentElement.remove(); updateDoorSummary(s); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
-                    area.appendChild(imgDiv);
-                    updateDoorSummary(area);
-                    autoSave();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+
+                        const imgDiv = document.createElement('div');
+                        imgDiv.className = "relative inline-block";
+                        imgDiv.innerHTML = `<img src="${compressedDataUrl}" class="photo-preview-img shadow-md"><button onclick="const s = this.closest('.door-section'); this.parentElement.remove(); updateDoorSummary(s); autoSave();" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">×</button>`;
+                        area.appendChild(imgDiv);
+                        updateDoorSummary(area);
+                        autoSave();
+                    };
+                    img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             });
@@ -316,9 +339,10 @@
                     <p><strong>Adres:</strong> ${data.header.adres} | <strong>Datum:</strong> ${data.header.datum}</p>
                 </div>`;
             data.doors.forEach((d, i) => {
+                let doorPrice = 0;
                 d.items.forEach(n => {
                     const art = artikelen.find(a => a.n === n);
-                    if(art) { grandTotalPrice += art.p; grandTotalHours += art.t; }
+                    if(art) { grandTotalPrice += art.p; grandTotalHours += art.t; doorPrice += art.p; }
                 });
                 content += `<div style="border:1px solid #ccc; margin-bottom:30px; border-radius:10px; overflow:hidden;">
                     <div style="page-break-inside: avoid;">
@@ -331,7 +355,7 @@
                                 }).join('')}
                             </table>
                             <div style="margin-top:15px; background:#f9f9f9; padding:10px; border-radius:5px;">
-                                <p><strong>Totaal Deur: <span style="color:#15803d;">${d.totalPrice}</span></strong></p>
+                                <p><strong>Totaal Deur: <span style="color:#15803d;">€ ${doorPrice.toFixed(2).replace('.', ',')}</span></strong></p>
                                 <p><strong>Nota:</strong> ${d.notes}</p>
                             </div>
                         </div>
